@@ -105,7 +105,7 @@ export const SetupQuestions = () => {
             <h1 className="text-2xl sm:text-3xl font-bold font-['Chivo'] text-white">
               Créer vos questions
             </h1>
-            <p className="text-[#B0B0C0] text-sm">
+            <p className="text-[#D8D8E8] text-sm font-medium">
               {completedCount}/15 questions complètes
             </p>
           </div>
