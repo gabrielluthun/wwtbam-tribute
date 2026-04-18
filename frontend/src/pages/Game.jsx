@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Volume2, VolumeX, Menu, Home, RotateCcw } from 'lucide-react';
+import { Volume2, VolumeX, Menu, Home, RotateCcw, Clock } from 'lucide-react';
 import { AnswerButton } from '../components/AnswerButton';
 import { MoneyTree } from '../components/MoneyTree';
 import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers';
@@ -16,11 +16,12 @@ import { soundManager } from '../utils/sounds';
 
 const GAME_STATES = {
   PLAYING: 'playing',
-  SELECTED: 'selected', // Answer selected, waiting for confirmation
-  REVEALING: 'revealing', // Showing if correct or wrong
+  SELECTED: 'selected',
+  REVEALING: 'revealing',
   WON: 'won',
   LOST: 'lost',
-  MILLION: 'million', // Won the million!
+  MILLION: 'million',
+  TIMEOUT: 'timeout',
 };
 
 export const Game = () => {
@@ -41,6 +42,13 @@ export const Game = () => {
   const [audienceResults, setAudienceResults] = useState(null);
   const [showAudienceDialog, setShowAudienceDialog] = useState(false);
   
+  // Timer state
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(30);
+  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [timerPaused, setTimerPaused] = useState(false);
+  const timerRef = useRef(null);
+  
   // UI state
   const [isMuted, setIsMuted] = useState(false);
   const [showMoneyTree, setShowMoneyTree] = useState(false);
@@ -56,6 +64,8 @@ export const Game = () => {
     const storedQuestions = sessionStorage.getItem('gameQuestions');
     const storedMode = sessionStorage.getItem('gameMode');
     const storedNames = sessionStorage.getItem('playerNames');
+    const storedTimerEnabled = sessionStorage.getItem('timerEnabled');
+    const storedTimerDuration = sessionStorage.getItem('timerDuration');
     
     if (!storedQuestions) {
       navigate('/setup');
@@ -68,14 +78,72 @@ export const Game = () => {
       setPlayerNames(JSON.parse(storedNames));
     }
     
+    // Load timer settings
+    if (storedTimerEnabled) {
+      const enabled = JSON.parse(storedTimerEnabled);
+      setTimerEnabled(enabled);
+      if (storedTimerDuration) {
+        const duration = JSON.parse(storedTimerDuration);
+        setTimerDuration(duration);
+        setTimeRemaining(duration);
+      }
+    }
+    
     // Initialize sound
     soundManager.init();
     soundManager.playBackground(1);
     
     return () => {
       soundManager.stopBackground();
+      soundManager.stopTimerTick();
     };
   }, [navigate]);
+
+  // Timer effect
+  useEffect(() => {
+    if (!timerEnabled || gameState !== GAME_STATES.PLAYING || timerPaused) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        soundManager.stopTimerTick();
+      }
+      return;
+    }
+
+    // Start timer tick sound
+    soundManager.startTimerTick();
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          soundManager.playTimerExpired();
+          setGameState(GAME_STATES.TIMEOUT);
+          return 0;
+        }
+        
+        // Warning sound at 10 seconds
+        if (prev === 11) {
+          soundManager.playTimerWarning();
+        }
+        
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      soundManager.stopTimerTick();
+    };
+  }, [timerEnabled, gameState, timerPaused, currentLevel]);
+
+  // Reset timer on level change
+  useEffect(() => {
+    if (timerEnabled) {
+      setTimeRemaining(timerDuration);
+    }
+  }, [currentLevel, timerEnabled, timerDuration]);
 
   const currentQuestion = questions[currentLevel - 1];
   const currentMoney = MONEY_LEVELS[currentLevel - 1];
@@ -88,8 +156,8 @@ export const Game = () => {
     soundManager.play('select');
     setSelectedAnswer(index);
     setGameState(GAME_STATES.SELECTED);
+    setTimerPaused(true); // Pause timer when answer selected
     
-    // Update answer states
     setAnswerStates(prev => prev.map((s, i) => i === index ? 'selected' : s));
   }, [gameState, eliminatedAnswers]);
 
@@ -99,8 +167,8 @@ export const Game = () => {
     
     setGameState(GAME_STATES.REVEALING);
     soundManager.play('final_answer');
+    soundManager.stopTimerTick();
     
-    // Tension delay before revealing
     setTimeout(() => {
       const isCorrect = selectedAnswer === currentQuestion.correctIndex;
       
@@ -108,12 +176,10 @@ export const Game = () => {
         soundManager.play('correct');
         setAnswerStates(prev => prev.map((s, i) => i === selectedAnswer ? 'correct' : s));
         
-        // Check if won the million
         if (currentLevel === 15) {
           soundManager.play('million');
           setGameState(GAME_STATES.MILLION);
         } else {
-          // Move to next level after delay
           setTimeout(() => {
             soundManager.play('level_up');
             setCurrentLevel(prev => prev + 1);
@@ -121,9 +187,9 @@ export const Game = () => {
             setSelectedAnswer(null);
             setAnswerStates(['default', 'default', 'default', 'default']);
             setEliminatedAnswers([]);
+            setTimerPaused(false);
             soundManager.playBackground(currentLevel + 1);
             
-            // Switch player in multiplayer
             if (gameMode === 'multi') {
               setCurrentPlayer(prev => (prev + 1) % 2);
             }
@@ -137,7 +203,6 @@ export const Game = () => {
           return s;
         }));
         
-        // Update scores in multiplayer
         if (gameMode === 'multi') {
           setScores(prev => {
             const newScores = [...prev];
@@ -150,7 +215,7 @@ export const Game = () => {
           setGameState(GAME_STATES.LOST);
         }, 2500);
       }
-    }, 3000); // 3 second tension delay
+    }, 3000);
   }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney]);
 
   // Cancel selection
@@ -158,6 +223,7 @@ export const Game = () => {
     if (gameState !== GAME_STATES.SELECTED) return;
     setSelectedAnswer(null);
     setGameState(GAME_STATES.PLAYING);
+    setTimerPaused(false); // Resume timer
     setAnswerStates(prev => prev.map(() => 'default'));
   }, [gameState]);
 
@@ -168,9 +234,13 @@ export const Game = () => {
     soundManager.play('fifty_fifty');
     setUsedJokers(prev => ({ ...prev, fifty: true }));
     
-    // Eliminate 2 wrong answers
     const wrongAnswers = [0, 1, 2, 3].filter(i => i !== currentQuestion.correctIndex);
-    const toEliminate = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 2);
+    // Fisher-Yates shuffle for fairness
+    for (let i = wrongAnswers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [wrongAnswers[i], wrongAnswers[j]] = [wrongAnswers[j], wrongAnswers[i]];
+    }
+    const toEliminate = wrongAnswers.slice(0, 2);
     
     setEliminatedAnswers(toEliminate);
     setAnswerStates(prev => prev.map((s, i) => toEliminate.includes(i) ? 'eliminated' : s));
@@ -182,6 +252,7 @@ export const Game = () => {
     
     soundManager.play('phone_friend');
     setUsedJokers(prev => ({ ...prev, phone: true }));
+    setTimerPaused(true); // Pause timer during joker
     
     const correctAnswer = currentQuestion.answers[currentQuestion.correctIndex];
     const response = getPhoneResponse(correctAnswer, currentQuestion.answers);
@@ -195,11 +266,23 @@ export const Game = () => {
     
     soundManager.play('ask_audience');
     setUsedJokers(prev => ({ ...prev, audience: true }));
+    setTimerPaused(true); // Pause timer during joker
     
     const results = generateAudienceResults(currentQuestion.correctIndex, eliminatedAnswers);
     setAudienceResults(results);
     setShowAudienceDialog(true);
   }, [usedJokers.audience, gameState, currentQuestion, eliminatedAnswers]);
+
+  // Close joker dialogs and resume timer
+  const closePhoneDialog = () => {
+    setShowPhoneDialog(false);
+    setTimerPaused(false);
+  };
+
+  const closeAudienceDialog = () => {
+    setShowAudienceDialog(false);
+    setTimerPaused(false);
+  };
 
   // Toggle mute
   const toggleMute = () => {
@@ -209,6 +292,7 @@ export const Game = () => {
 
   // Walk away
   const handleWalkAway = () => {
+    soundManager.stopTimerTick();
     if (gameMode === 'multi') {
       setScores(prev => {
         const newScores = [...prev];
@@ -229,6 +313,8 @@ export const Game = () => {
     setEliminatedAnswers([]);
     setCurrentPlayer(0);
     setScores([0, 0]);
+    setTimeRemaining(timerDuration);
+    setTimerPaused(false);
     soundManager.playBackground(1);
   };
 
@@ -240,8 +326,34 @@ export const Game = () => {
     );
   }
 
-  // End game screens
-  if (gameState === GAME_STATES.LOST || gameState === GAME_STATES.WON || gameState === GAME_STATES.MILLION) {
+  // Timer display component
+  const TimerDisplay = () => {
+    if (!timerEnabled) return null;
+    
+    const isWarning = timeRemaining <= 10;
+    const isCritical = timeRemaining <= 5;
+    
+    return (
+      <motion.div
+        className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+          isCritical ? 'bg-red-500/30 text-red-400' :
+          isWarning ? 'bg-yellow-500/30 text-yellow-400' :
+          'bg-white/10 text-white'
+        }`}
+        animate={isCritical ? { scale: [1, 1.1, 1] } : {}}
+        transition={{ repeat: Infinity, duration: 0.5 }}
+        data-testid="timer-display"
+      >
+        <Clock size={18} />
+        <span className="font-bold font-mono text-lg">
+          {timeRemaining}s
+        </span>
+      </motion.div>
+    );
+  };
+
+  // End game screens (including timeout)
+  if (gameState === GAME_STATES.LOST || gameState === GAME_STATES.WON || gameState === GAME_STATES.MILLION || gameState === GAME_STATES.TIMEOUT) {
     const winAmount = gameState === GAME_STATES.MILLION 
       ? MONEY_LEVELS[14].display 
       : gameState === GAME_STATES.WON 
@@ -273,6 +385,20 @@ export const Game = () => {
             <>
               <h1 className="text-3xl font-bold font-['Chivo'] text-[#00E5FF] mb-4">
                 Bien joué !
+              </h1>
+              <p className="text-[#B0B0C0] mb-2">Vous repartez avec</p>
+            </>
+          ) : gameState === GAME_STATES.TIMEOUT ? (
+            <>
+              <motion.div
+                className="text-6xl mb-4"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                <Clock className="mx-auto text-[#D32F2F]" size={64} />
+              </motion.div>
+              <h1 className="text-3xl font-bold font-['Chivo'] text-[#D32F2F] mb-4">
+                Temps écoulé !
               </h1>
               <p className="text-[#B0B0C0] mb-2">Vous repartez avec</p>
             </>
@@ -348,6 +474,7 @@ export const Game = () => {
               >
                 {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
               </button>
+              <TimerDisplay />
             </div>
             
             {/* Current player indicator (multiplayer) */}
@@ -477,13 +604,13 @@ export const Game = () => {
       <PhoneFriendDialog
         isOpen={showPhoneDialog}
         response={phoneResponse}
-        onClose={() => setShowPhoneDialog(false)}
+        onClose={closePhoneDialog}
       />
       
       <AudienceResults
         isOpen={showAudienceDialog}
         results={audienceResults || [0, 0, 0, 0]}
-        onClose={() => setShowAudienceDialog(false)}
+        onClose={closeAudienceDialog}
       />
     </div>
   );

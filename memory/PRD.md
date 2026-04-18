@@ -98,3 +98,31 @@ L'utilisateur souhaite créer une application "Qui Veut Gagner des Millions" fid
 1. Ajouter des sons personnalisés de meilleure qualité
 2. Implémenter l'import/export de questions JSON
 3. Ajouter un mode timer optionnel
+
+## Update 18 Jan 2026 - Nouvelles fonctionnalités
+
+### Sons améliorés ✅
+- Nouveaux effets sonores de meilleure qualité (Pixabay)
+- Sons pour : suspense/tension, sélection, bonne/mauvaise réponse, jokers, niveau franchi, million gagné
+- Sons de timer : tick, warning (10s), temps écoulé
+- Gestion distincte du son de fond et des effets
+
+### Import/Export JSON ✅
+- Export des questions en fichier JSON téléchargeable
+- Import de fichiers JSON pour charger des questions pré-faites
+- Format JSON structuré avec métadonnées (version, date, nom)
+- Les réglages du timer sont inclus dans l'export
+
+### Timer optionnel ✅
+- Activation/désactivation via switch dans les options
+- Durée configurable (10-120 secondes)
+- Affichage du temps restant en haut du jeu
+- Couleur du timer : blanc → jaune (10s) → rouge (5s)
+- Animation pulsante quand le temps est critique
+- Pause automatique lors de l'utilisation des jokers ou sélection de réponse
+- Écran "Temps écoulé !" si le timer expire
+
+### Fichiers modifiés
+- `/app/frontend/src/utils/sounds.js` - Nouveaux sons + gestion timer
+- `/app/frontend/src/pages/SetupQuestions.jsx` - Import/Export + Timer settings
+- `/app/frontend/src/pages/Game.jsx` - Logique timer + affichage

@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Play, ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings } from 'lucide-react';
 import { Input } from '../components/ui/input';
+import { Switch } from '../components/ui/switch';
 import { MONEY_LEVELS, createEmptyQuestion, ANSWER_LETTERS } from '../utils/gameData';
 
 export const SetupQuestions = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMultiplayer = searchParams.get('mode') === 'multi';
+  const fileInputRef = useRef(null);
   
   const [questions, setQuestions] = useState(() => 
     Array.from({ length: 15 }, (_, i) => createEmptyQuestion(i + 1))
@@ -16,6 +18,15 @@ export const SetupQuestions = () => {
   const [currentEditIndex, setCurrentEditIndex] = useState(0);
   const [errors, setErrors] = useState({});
   const [playerNames, setPlayerNames] = useState(['Joueur 1', 'Joueur 2']);
+  
+  // Timer settings
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(30);
+  
+  // Import/Export state
+  const [showImportExport, setShowImportExport] = useState(false);
+  const [importError, setImportError] = useState('');
+  const [importSuccess, setImportSuccess] = useState('');
 
   const currentQuestion = questions[currentEditIndex];
   const currentLevel = MONEY_LEVELS[currentEditIndex];
@@ -26,7 +37,6 @@ export const SetupQuestions = () => {
       updated[currentEditIndex] = { ...updated[currentEditIndex], [field]: value };
       return updated;
     });
-    // Clear error for this field
     setErrors(prev => ({ ...prev, [`${currentEditIndex}-${field}`]: null }));
   };
 
@@ -73,11 +83,104 @@ export const SetupQuestions = () => {
     return allAnswersFilled ? 'complete' : 'partial';
   };
 
+  // Export questions to JSON
+  const handleExport = () => {
+    const exportData = {
+      version: '1.0',
+      name: 'Mes Questions QVGDM',
+      createdAt: new Date().toISOString(),
+      timerSettings: {
+        enabled: timerEnabled,
+        duration: timerDuration
+      },
+      questions: questions.map((q, idx) => ({
+        level: idx + 1,
+        amount: MONEY_LEVELS[idx].display,
+        question: q.question,
+        answers: {
+          A: q.answers[0],
+          B: q.answers[1],
+          C: q.answers[2],
+          D: q.answers[3]
+        },
+        correctAnswer: ANSWER_LETTERS[q.correctIndex]
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qvgdm-questions-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setImportSuccess('Questions exportées avec succès !');
+    setTimeout(() => setImportSuccess(''), 3000);
+  };
+
+  // Import questions from JSON
+  const handleImport = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result);
+        
+        // Validate the structure
+        if (!data.questions || !Array.isArray(data.questions) || data.questions.length !== 15) {
+          throw new Error('Le fichier doit contenir exactement 15 questions');
+        }
+
+        // Convert imported data to our format
+        const importedQuestions = data.questions.map((q, idx) => ({
+          id: `q-${idx + 1}`,
+          question: q.question || '',
+          answers: [
+            q.answers?.A || '',
+            q.answers?.B || '',
+            q.answers?.C || '',
+            q.answers?.D || ''
+          ],
+          correctIndex: ANSWER_LETTERS.indexOf(q.correctAnswer) >= 0 
+            ? ANSWER_LETTERS.indexOf(q.correctAnswer) 
+            : 0
+        }));
+
+        setQuestions(importedQuestions);
+        
+        // Import timer settings if available
+        if (data.timerSettings) {
+          setTimerEnabled(data.timerSettings.enabled || false);
+          setTimerDuration(data.timerSettings.duration || 30);
+        }
+
+        setImportError('');
+        setImportSuccess('Questions importées avec succès !');
+        setTimeout(() => setImportSuccess(''), 3000);
+      } catch (err) {
+        setImportError(err.message || 'Erreur lors de l\'import du fichier');
+        setImportSuccess('');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const startGame = () => {
     if (validateAllQuestions()) {
-      // Store questions in sessionStorage for the game
       sessionStorage.setItem('gameQuestions', JSON.stringify(questions));
       sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
+      sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
+      sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
       if (isMultiplayer) {
         sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
       }
@@ -89,9 +192,9 @@ export const SetupQuestions = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1A1A3A] via-[#0B0B1A] to-[#05050A] p-4 sm:p-6">
-      {/* Header */}
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <button
             className="flex items-center gap-2 text-[#B0B0C0] hover:text-white transition-colors"
             onClick={() => navigate('/')}
@@ -110,16 +213,115 @@ export const SetupQuestions = () => {
             </p>
           </div>
           
-          <button
-            className="btn-primary flex items-center gap-2 text-sm"
-            onClick={startGame}
-            disabled={completedCount < 15}
-            data-testid="start-game-btn"
-          >
-            <Play size={18} />
-            Commencer
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="btn-secondary flex items-center gap-2 text-sm"
+              onClick={() => setShowImportExport(!showImportExport)}
+              data-testid="toggle-import-export"
+            >
+              <Settings size={16} />
+              Options
+            </button>
+            <button
+              className="btn-primary flex items-center gap-2 text-sm"
+              onClick={startGame}
+              disabled={completedCount < 15}
+              data-testid="start-game-btn"
+            >
+              <Play size={18} />
+              Commencer
+            </button>
+          </div>
         </div>
+
+        {/* Import/Export & Timer Panel */}
+        <AnimatePresence>
+          {showImportExport && (
+            <motion.div
+              className="glass-light rounded-lg p-4 mb-6"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Import/Export */}
+                <div>
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Download size={18} className="text-[#00E5FF]" />
+                    Import / Export
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      className="btn-secondary text-sm flex items-center gap-2"
+                      onClick={handleExport}
+                      data-testid="export-btn"
+                    >
+                      <Download size={16} />
+                      Exporter JSON
+                    </button>
+                    <label className="btn-secondary text-sm flex items-center gap-2 cursor-pointer">
+                      <Upload size={16} />
+                      Importer JSON
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImport}
+                        data-testid="import-input"
+                      />
+                    </label>
+                  </div>
+                  {importError && (
+                    <p className="text-red-400 text-sm mt-2">{importError}</p>
+                  )}
+                  {importSuccess && (
+                    <p className="text-green-400 text-sm mt-2">{importSuccess}</p>
+                  )}
+                </div>
+
+                {/* Timer Settings */}
+                <div>
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Clock size={18} className="text-[#FFD700]" />
+                    Timer (optionnel)
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={timerEnabled}
+                        onCheckedChange={setTimerEnabled}
+                        data-testid="timer-toggle"
+                      />
+                      <span className="text-[#B0B0C0] text-sm">
+                        {timerEnabled ? 'Activé' : 'Désactivé'}
+                      </span>
+                    </div>
+                    {timerEnabled && (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="10"
+                          max="120"
+                          value={timerDuration}
+                          onChange={(e) => setTimerDuration(Math.max(10, Math.min(120, parseInt(e.target.value) || 30)))}
+                          className="game-input w-20 text-center"
+                          data-testid="timer-duration"
+                        />
+                        <span className="text-[#B0B0C0] text-sm">secondes</span>
+                      </div>
+                    )}
+                  </div>
+                  {timerEnabled && (
+                    <p className="text-[#B0B0C0] text-xs mt-2">
+                      Le temps s'écoule pendant chaque question. Si le temps expire, la partie est perdue.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Multiplayer names */}
         {isMultiplayer && (
