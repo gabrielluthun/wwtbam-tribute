@@ -1,0 +1,66 @@
+{
+  "summary": "Completed end-to-end frontend testing of 'Qui Veut Gagner des Millions'. All core flows work: Home -> Setup (create 15 questions) -> Game (answer selection, jokers 50:50/phone/audience, confirm/cancel, correct->advance, wrong->game over, restart, multiplayer setup). All data-testid selectors resolve correctly. Main issue found: logo PNG has a glaring white background which clashes heavily with the dark studio theme. Minor: subtitle contrast is low and AnimatePresence transition on question navigation creates a brief (~200ms) window during which textareas can receive input for the wrong question (not user-blocking, but worth noting).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Home logo",
+        "issue": "Logo image from emergentagent CDN has a solid WHITE background (non-transparent PNG), which appears as a harsh white square against the dark studio background. Visible in Home and should be fixed by using a transparent PNG/SVG or wrapping with mix-blend-mode / removing the image in favor of CSS-only title.",
+        "selector": "[data-testid=\"game-logo\"]",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Home subtitle",
+        "issue": "Subtitle text 'Créez vos propres questions...' uses text-[#B0B0C0] on a dark gradient; combined with the overlay it renders very faint/barely readable (low contrast).",
+        "selector": ".relative.z-10 p.text-\\[\\#B0B0C0\\]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "SetupQuestions - navigating between questions",
+        "issue": "The AnimatePresence exit animation on the question card (duration 0.2s) briefly keeps the previous <textarea> in the DOM during transition. Rapid programmatic fills can target the wrong question element. Real users are unlikely to hit this, but it indicates the form is remounted (key={currentEditIndex}) for every nav click instead of reusing the inputs, which also forces re-animation on every switch.",
+        "affected_selectors": ["[data-testid=\"question-input\"]", "[data-testid=\"answer-input-a\"]"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Home",
+        "issues": [
+          "Logo has white background breaking the dark premium look",
+          "Tagline/subtitle contrast below WCAG AA"
+        ]
+      },
+      {
+        "screen": "Setup",
+        "issues": [
+          "Status text '14/15 questions complètes' is small and uses the same low-contrast grey as the subtitle"
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Replace/process the Home logo image so it has a transparent background (or remove it and rely on the text title)",
+    "Improve contrast of secondary text (#B0B0C0 on dark gradient) to meet WCAG AA – consider #D8D8E8 or brighter",
+    "Optional: remove AnimatePresence key={currentEditIndex} on the question card, or reduce exit animation to 0 for the textarea swap so inputs are not transiently duplicated in DOM"
+  ],
+  "critical_code_review_comments": [
+    "Game.jsx currentQuestion access at render time (line 80) is safe due to the early-return 'Chargement...' guard, but setCurrentLevel(prev+1) followed by immediate soundManager.playBackground(currentLevel+1) uses stale closure value – works here since both are +1, but fragile.",
+    "handleFiftyFifty's Math.random().sort() shuffle is not uniformly random – use Fisher-Yates for fairness.",
+    "SetupQuestions: re-keying the motion.div with currentEditIndex causes full remount of the form on every nav click; consider keeping the form mounted and only transitioning a wrapper to avoid flicker.",
+    "Game.jsx file is ~490 lines; close to the 700-line guideline but acceptable. Consider extracting GameOver screen into its own component.",
+    "No error boundaries around routes – a runtime error in Game would crash the whole app."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only test)", "frontend": "95%"},
+  "test_credentials": "none required",
+  "seed_data_creation": "Tested by filling 15 questions via UI; sessionStorage data created at runtime.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 14 requested features work. Focus retest on: (1) logo background fix on Home page, (2) text contrast improvements, (3) optional question navigation flicker fix. Use data-testids listed in other_misc_info. When filling questions via Playwright, add ~300ms wait_for_timeout between question-nav click and fill to avoid AnimatePresence race condition.",
+  "rca of the issue": "Logo white background: source PNG (emergentagent CDN) was exported with a solid white background instead of transparent. Mitigation: either re-export with alpha channel, swap to an SVG/transparent asset, or apply mix-blend-mode:multiply / screen. Contrast issue: Tailwind arbitrary color #B0B0C0 + dark-layer overlay drops effective contrast below ~3:1. Question-nav flicker: motion.div in SetupQuestions.jsx keyed on currentEditIndex forces remount+exit animation, briefly presenting two textareas in DOM."
+}
