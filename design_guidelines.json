@@ -1,0 +1,94 @@
+{
+  "theme": "dark",
+  "archetype": "5 (Jewel & Luxury)",
+  "emotional_tone": "Tense, high-stakes, cinematic, luxurious",
+  "colors": {
+    "background": {
+      "base": "#0B0B1A",
+      "gradient_start": "#1A1A3A",
+      "gradient_end": "#05050A"
+    },
+    "primary": "#FFD700",
+    "secondary": "#00E5FF",
+    "accent_correct": "#2E7D32",
+    "accent_wrong": "#D32F2F",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#B0B0C0",
+    "surface": {
+      "default": "rgba(26, 26, 58, 0.6)",
+      "hover": "rgba(26, 26, 58, 0.9)",
+      "border": "rgba(0, 229, 255, 0.3)",
+      "border_active": "#FFD700"
+    }
+  },
+  "typography": {
+    "heading_font": "Chivo",
+    "body_font": "Outfit",
+    "strategies": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-[0_0_15px_rgba(0,229,255,0.5)]",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white",
+      "h3": "text-xl sm:text-2xl font-semibold text-white",
+      "body": "text-base font-medium text-[#B0B0C0]",
+      "labels": "text-sm uppercase tracking-[0.2em] text-[#FFD700] font-bold"
+    }
+  },
+  "layout_and_spacing": {
+    "grid_strategy": "The 'Control Room' Grid heavily modified for a central stage (Hero focus) and right sidebar (Money Tree). Asymmetrical focus on the center hexagon.",
+    "spacing_scale": "p-4, p-6, p-8, p-12, p-16. Use generous p-8 in the main question container to give breathing room.",
+    "alignment": "Center-aligned for the main question and answers to mimic the TV broadcast. Left-aligned for the money tree sidebar."
+  },
+  "surface_strategies": {
+    "question_hexagon": "Glassmorphism with a sharp 1px border. bg-black/60 backdrop-blur-xl border-t border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.5)]",
+    "answer_buttons": "The 'Tracing Beam' inspired. Default: solid dark blue with glowing cyan border. Hover: border turns gold, slight scale up. Active/Selected: solid gold. Correct: pulsing green. Wrong: red.",
+    "money_tree": "Neumorphism mix. Dark glass panel with bright highlighted text for the current level. Past levels dimmed."
+  },
+  "components_usage": {
+    "buttons": "Custom HTML/Tailwind for the hexagonal answer buttons to capture the TV show shape. No standard Shadcn button for answers. Use Shadcn for form inputs and admin question creation.",
+    "inputs": "Shadcn UI Input, heavily styled with dark mode colors and gold focus rings.",
+    "jokers": "Circular buttons with glassmorphism, floating top right. When used, cross them out with a red slash."
+  },
+  "animations": {
+    "library": "framer-motion",
+    "entrance": "Staggered fade-in and slide-up for answers. (delay: 0.2s each)",
+    "selection": "Pulsing gold background (is it your final answer?) for 2-3 seconds before revealing correct.",
+    "correct": "Flash rapid white/green, then solid glowing green.",
+    "wrong": "Shake animation, solid red.",
+    "money_tree_progress": "Smooth vertical slide of the active indicator."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "category": "background",
+        "description": "Cinematic dark studio background with volumetric blue spotlights",
+        "url": "https://static.prod-images.emergentagent.com/jobs/201663b8-c6e5-4fe3-9467-f84ce9541ef8/images/8998f07639f87d3e7809cdda593c76b01e0b0229e1dc2042beb2be3c3d7be149.png"
+      },
+      {
+        "category": "background_fallback",
+        "description": "Blue light beam illuminates dark background",
+        "url": "https://images.unsplash.com/photo-1773769234826-65edeac80f99?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwzfHxkYXJrJTIwc3R1ZGlvJTIwc3BvdGxpZ2h0JTIwYmx1ZXxlbnwwfHx8fDE3NzY1MjE3NDB8MA&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "category": "logo",
+        "description": "Minimalist metallic silver game show identity logo",
+        "url": "https://static.prod-images.emergentagent.com/jobs/201663b8-c6e5-4fe3-9467-f84ce9541ef8/images/76761474e727d34111172a4702dee899a1423becbf008af6d82c07c820773241.png"
+      },
+      {
+        "category": "ui_element",
+        "description": "Glowing metallic gold hexagonal button frame",
+        "url": "https://static.prod-images.emergentagent.com/jobs/201663b8-c6e5-4fe3-9467-f84ce9541ef8/images/05f6a0b251119e9c507ba25a00148077e00cb76f7e9216c51dd48ef3d699132b.png"
+      }
+    ],
+    "sound_instructions": "Implement royalty-free sounds for hover (click), selection (tension hum), correct (triumphant bell), wrong (dissonant strike), and background atmospheric loop."
+  },
+  "testing": {
+    "instructions": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Install specific fonts via Google Fonts: Chivo and Outfit.",
+    "Install framer-motion.",
+    "Build the TV show's 'Hexagon' answer buttons using CSS clip-path (polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0% 50%)) to faithfully recreate the iconic look.",
+    "Implement the 'Pyramide des gains' (Money Tree) with 15 levels: 100, 200, 300, 500, 1000, 2000, 4000, 8000, 12000, 24000, 48000, 72000, 100000, 300000, 1000000.",
+    "Add 'Jokers' (50:50, Phone a Friend, Ask the Audience) visually as round floating buttons. When used, apply a crossed-out visual state.",
+    "Ensure 'is final answer?' tension logic: When clicking an answer, wait 2-3 seconds before showing correct/wrong, pulsing the button gold during this wait to build tension like in the show."
+  ]
+}
