@@ -15,14 +15,33 @@ import {
 import { soundManager } from '../utils/sounds';
 
 const GAME_STATES = {
+  INTRO: 'intro',
   PLAYING: 'playing',
   SELECTED: 'selected',
   REVEALING: 'revealing',
+  TRANSITION: 'transition',
   WON: 'won',
   LOST: 'lost',
   MILLION: 'million',
   TIMEOUT: 'timeout',
 };
+
+// Pauses "respiration" entre les sons pour fluidifier les transitions TV
+const DRAMATIC_PAUSE_MS = 3000;  // Pause dramatique apres "Final Answer"
+const OUTCOME_MIN_MS = 2500;     // Duree minimale de l'ecran resultat
+const OUTCOME_MAX_MS = 5000;     // Duree maximale (coupe les stingers longs)
+const LETSPLAY_MAX_MS = 4500;    // Duree max d'attente du "Let's Play"
+const INTRO_MAX_MS = 3500;       // Duree max d'attente du jingle d'ouverture
+const SILENCE_BETWEEN_MS = 450;  // Petit silence entre deux sons
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Attend la fin du son (ou minMs si plus long), cappe a maxMs
+const waitForSound = (soundPromise, minMs = 0, maxMs = 8000) =>
+  Promise.race([
+    Promise.all([Promise.resolve(soundPromise), sleep(minMs)]),
+    sleep(maxMs),
+  ]);
 
 export const Game = () => {
   const navigate = useNavigate();
@@ -89,11 +108,22 @@ export const Game = () => {
       }
     }
     
-    // Initialize sound
+    // Initialisation : passage en INTRO avec jingle d'ouverture puis gameplay
     soundManager.init();
-    soundManager.playBackground(1);
+    setGameState(GAME_STATES.INTRO);
+    let cancelled = false;
+    (async () => {
+      const introPromise = soundManager.playGameStart();
+      await waitForSound(introPromise, 0, INTRO_MAX_MS);
+      if (cancelled) return;
+      await sleep(SILENCE_BETWEEN_MS);
+      if (cancelled) return;
+      setGameState(GAME_STATES.PLAYING);
+      soundManager.playBed(1);
+    })();
     
     return () => {
+      cancelled = true;
       soundManager.stopBackground();
       soundManager.stopTimerTick();
     };
@@ -153,7 +183,6 @@ export const Game = () => {
   const handleSelectAnswer = useCallback((index) => {
     if (gameState !== GAME_STATES.PLAYING || eliminatedAnswers.includes(index)) return;
     
-    soundManager.play('select');
     setSelectedAnswer(index);
     setGameState(GAME_STATES.SELECTED);
     setTimerPaused(true); // Pause timer when answer selected
@@ -161,61 +190,73 @@ export const Game = () => {
     setAnswerStates(prev => prev.map((s, i) => i === index ? 'selected' : s));
   }, [gameState, eliminatedAnswers]);
 
-  // Confirm final answer
-  const handleConfirmAnswer = useCallback(() => {
+  // Confirm final answer - sequence async pour transitions audio/visuel fluides
+  const handleConfirmAnswer = useCallback(async () => {
     if (gameState !== GAME_STATES.SELECTED || selectedAnswer === null) return;
     
     setGameState(GAME_STATES.REVEALING);
-    soundManager.play('final_answer');
+    // Jingle "Final Answer" du niveau (coupe le bed musical)
+    const finalPromise = soundManager.playFinalAnswer(currentLevel);
     soundManager.stopTimerTick();
     
-    setTimeout(() => {
-      const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+    // Pause dramatique : on laisse le stinger + l'animation respirer
+    await waitForSound(finalPromise, DRAMATIC_PAUSE_MS, DRAMATIC_PAUSE_MS + 1500);
+    
+    const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+    
+    if (isCorrect) {
+      setAnswerStates(prev => prev.map((s, i) => i === selectedAnswer ? 'correct' : s));
+      const winPromise = soundManager.playCorrect(currentLevel);
       
-      if (isCorrect) {
-        soundManager.play('correct');
-        setAnswerStates(prev => prev.map((s, i) => i === selectedAnswer ? 'correct' : s));
-        
-        if (currentLevel === 15) {
-          soundManager.play('million');
-          setGameState(GAME_STATES.MILLION);
-        } else {
-          setTimeout(() => {
-            soundManager.play('level_up');
-            setCurrentLevel(prev => prev + 1);
-            setGameState(GAME_STATES.PLAYING);
-            setSelectedAnswer(null);
-            setAnswerStates(['default', 'default', 'default', 'default']);
-            setEliminatedAnswers([]);
-            setTimerPaused(false);
-            soundManager.playBackground(currentLevel + 1);
-            
-            if (gameMode === 'multi') {
-              setCurrentPlayer(prev => (prev + 1) % 2);
-            }
-          }, 2500);
-        }
-      } else {
-        soundManager.play('wrong');
-        setAnswerStates(prev => prev.map((s, i) => {
-          if (i === selectedAnswer) return 'wrong';
-          if (i === currentQuestion.correctIndex) return 'correct';
-          return s;
-        }));
-        
-        if (gameMode === 'multi') {
-          setScores(prev => {
-            const newScores = [...prev];
-            newScores[currentPlayer] = guaranteedMoney.amount;
-            return newScores;
-          });
-        }
-        
-        setTimeout(() => {
-          setGameState(GAME_STATES.LOST);
-        }, 2500);
+      if (currentLevel === 15) {
+        // Pour le million, on laisse le stinger complet se jouer sur l'ecran MILLION
+        setGameState(GAME_STATES.MILLION);
+        return;
       }
-    }, 3000);
+      
+      // On laisse le stinger de victoire se jouer (cap a OUTCOME_MAX_MS)
+      await waitForSound(winPromise, OUTCOME_MIN_MS, OUTCOME_MAX_MS);
+      await sleep(SILENCE_BETWEEN_MS);
+      
+      // Passage en TRANSITION : on annonce le nouveau palier avant d'afficher la question
+      const nextLevel = currentLevel + 1;
+      setCurrentLevel(nextLevel);
+      setGameState(GAME_STATES.TRANSITION);
+      setSelectedAnswer(null);
+      setAnswerStates(['default', 'default', 'default', 'default']);
+      setEliminatedAnswers([]);
+      if (gameMode === 'multi') {
+        setCurrentPlayer(prev => (prev + 1) % 2);
+      }
+      
+      // "Let's Play <montant>" : on attend sa fin avant de reveler la question
+      const letsPlayPromise = soundManager.playLetsPlay(nextLevel);
+      await waitForSound(letsPlayPromise, 0, LETSPLAY_MAX_MS);
+      await sleep(SILENCE_BETWEEN_MS);
+      
+      setGameState(GAME_STATES.PLAYING);
+      setTimerPaused(false);
+      soundManager.playBed(nextLevel);
+    } else {
+      soundManager.playWrong(currentLevel);
+      setAnswerStates(prev => prev.map((s, i) => {
+        if (i === selectedAnswer) return 'wrong';
+        if (i === currentQuestion.correctIndex) return 'correct';
+        return s;
+      }));
+      
+      if (gameMode === 'multi') {
+        setScores(prev => {
+          const newScores = [...prev];
+          newScores[currentPlayer] = guaranteedMoney.amount;
+          return newScores;
+        });
+      }
+      
+      // On laisse le verdict s'installer avant l'ecran "Game Over"
+      await sleep(OUTCOME_MIN_MS + 500);
+      setGameState(GAME_STATES.LOST);
+    }
   }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney]);
 
   // Cancel selection
@@ -231,7 +272,7 @@ export const Game = () => {
   const handleFiftyFifty = useCallback(() => {
     if (usedJokers.fifty || gameState !== GAME_STATES.PLAYING) return;
     
-    soundManager.play('fifty_fifty');
+    soundManager.playFiftyFifty();
     setUsedJokers(prev => ({ ...prev, fifty: true }));
     
     const wrongAnswers = [0, 1, 2, 3].filter(i => i !== currentQuestion.correctIndex);
@@ -250,7 +291,7 @@ export const Game = () => {
   const handlePhoneFriend = useCallback(() => {
     if (usedJokers.phone || gameState !== GAME_STATES.PLAYING) return;
     
-    soundManager.play('phone_friend');
+    soundManager.playPhoneFriend();
     setUsedJokers(prev => ({ ...prev, phone: true }));
     setTimerPaused(true); // Pause timer during joker
     
@@ -264,7 +305,7 @@ export const Game = () => {
   const handleAskAudience = useCallback(() => {
     if (usedJokers.audience || gameState !== GAME_STATES.PLAYING) return;
     
-    soundManager.play('ask_audience');
+    soundManager.playAskAudience();
     setUsedJokers(prev => ({ ...prev, audience: true }));
     setTimerPaused(true); // Pause timer during joker
     
@@ -293,6 +334,8 @@ export const Game = () => {
   // Walk away
   const handleWalkAway = () => {
     soundManager.stopTimerTick();
+    soundManager.stopBed();
+    soundManager.playGoodbye();
     if (gameMode === 'multi') {
       setScores(prev => {
         const newScores = [...prev];
@@ -315,7 +358,15 @@ export const Game = () => {
     setScores([0, 0]);
     setTimeRemaining(timerDuration);
     setTimerPaused(false);
-    soundManager.playBackground(1);
+    // Re-declenche la sequence d'intro au redemarrage
+    setGameState(GAME_STATES.INTRO);
+    (async () => {
+      const introPromise = soundManager.playGameStart();
+      await waitForSound(introPromise, 0, INTRO_MAX_MS);
+      await sleep(SILENCE_BETWEEN_MS);
+      setGameState(GAME_STATES.PLAYING);
+      soundManager.playBed(1);
+    })();
   };
 
   if (!currentQuestion) {
@@ -607,6 +658,48 @@ export const Game = () => {
         onClose={closePhoneDialog}
       />
       
+      {/* Overlay de transition entre les niveaux / intro */}
+      <AnimatePresence>
+        {(gameState === GAME_STATES.INTRO || gameState === GAME_STATES.TRANSITION) && (
+          <motion.div
+            className="fixed inset-0 z-40 flex items-center justify-center bg-[#0B0B1A]/85 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            data-testid="transition-overlay"
+          >
+            <motion.div
+              className="text-center px-6"
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            >
+              <p className="text-[#00E5FF] text-sm sm:text-base uppercase tracking-[0.3em] mb-4">
+                {gameState === GAME_STATES.INTRO ? 'Prêt ?' : `Question ${currentLevel}`}
+              </p>
+              <motion.h1
+                className={`text-5xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] ${
+                  currentMoney.checkpoint ? 'text-[#00E5FF] text-glow-cyan' : 'text-[#FFD700] text-glow-gold'
+                }`}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 1.8 }}
+              >
+                {gameState === GAME_STATES.INTRO
+                  ? `${MONEY_LEVELS[0].display}`
+                  : `Pour ${currentMoney.display}`}
+              </motion.h1>
+              {currentMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
+                <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">
+                  Palier garanti
+                </p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AudienceResults
         isOpen={showAudienceDialog}
         results={audienceResults || [0, 0, 0, 0]}

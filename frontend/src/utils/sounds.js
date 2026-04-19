@@ -1,172 +1,289 @@
-// Sound URLs - Using high-quality royalty-free sounds similar to the TV show
-// Freesound.org and Pixabay provide game show-like sounds
+// Gestionnaire audio utilisant les vrais assets musicaux de l'emission
+// "Qui Veut Gagner Des Millions" (version UK originale remappee sur 15 niveaux).
+//
+// Les niveaux 1 a 5 partagent un meme bed musical ("tier 1"), le niveau 5
+// (checkpoint 1 000 EUR) beneficie d'un jingle special. Les niveaux 6 a 15
+// ont chacun leur propre set : lets_play / question bed / final answer /
+// win / lose.
 
-const SOUND_URLS = {
-  // Background tension music for different levels (ambient suspense)
-  background_low: 'https://cdn.pixabay.com/audio/2022/10/18/audio_ce166dbce5.mp3', // Suspense ambient
-  background_mid: 'https://cdn.pixabay.com/audio/2023/07/06/audio_12b0c7443c.mp3', // Rising tension
-  background_high: 'https://cdn.pixabay.com/audio/2022/03/15/audio_8cb749bf57.mp3', // High stakes
-  
-  // Answer sounds - closer to the TV show style
-  select: 'https://cdn.pixabay.com/audio/2022/03/10/audio_f11e7f1191.mp3', // Selection click
-  final_answer: 'https://cdn.pixabay.com/audio/2022/10/18/audio_ce166dbce5.mp3', // "Final answer" tension
-  correct: 'https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3', // Victory fanfare
-  wrong: 'https://cdn.pixabay.com/audio/2022/03/15/audio_942694cbd0.mp3', // Wrong answer dramatic
-  
-  // Timer sounds
-  timer_tick: 'https://cdn.pixabay.com/audio/2022/03/24/audio_8e7a57bf5e.mp3', // Clock tick
-  timer_warning: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0c6ff0425.mp3', // Warning beep
-  timer_expired: 'https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3', // Time's up
-  
-  // UI sounds
-  hover: 'https://cdn.pixabay.com/audio/2022/03/10/audio_f11e7f1191.mp3', // Subtle hover
-  click: 'https://cdn.pixabay.com/audio/2022/11/21/audio_a94e0c5c87.mp3', // Button click
-  
-  // Joker sounds - dramatic reveals
-  fifty_fifty: 'https://cdn.pixabay.com/audio/2022/03/15/audio_7a79e82418.mp3', // 50:50 whoosh
-  phone_friend: 'https://cdn.pixabay.com/audio/2022/10/30/audio_9b1eb9e678.mp3', // Phone ringing
-  ask_audience: 'https://cdn.pixabay.com/audio/2024/02/19/audio_a93e0d9f4f.mp3', // Crowd murmur
-  
-  // Level progression
-  level_up: 'https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3', // Level complete
-  checkpoint: 'https://cdn.pixabay.com/audio/2022/03/15/audio_4da09bb0bc.mp3', // Checkpoint reached
-  million: 'https://cdn.pixabay.com/audio/2024/09/08/audio_6de7e02ca3.mp3', // Grand victory - million won!
-  
-  // Game start/end
-  game_start: 'https://cdn.pixabay.com/audio/2022/03/10/audio_f11e7f1191.mp3', // Game intro
-  game_over: 'https://cdn.pixabay.com/audio/2022/03/15/audio_942694cbd0.mp3', // Game over
+import intro_rules from '../asset/sounds/intro_rules.mp3';
+import game_start from '../asset/sounds/game_start.mp3';
+
+// Tier 1 - niveaux 1 a 5
+import q_tier1 from '../asset/sounds/q_tier1.mp3';
+import win_tier1 from '../asset/sounds/win_tier1.mp3';
+import lose_tier1 from '../asset/sounds/lose_tier1.mp3';
+import checkpoint_1k_win from '../asset/sounds/checkpoint_1k_win.mp3';
+
+// Niveau 6 (2 000 EUR)
+import lets_play_L06 from '../asset/sounds/lets_play_L06.mp3';
+import q_L06 from '../asset/sounds/q_L06.mp3';
+import final_L06 from '../asset/sounds/final_L06.mp3';
+import lose_L06 from '../asset/sounds/lose_L06.mp3';
+import win_L06 from '../asset/sounds/win_L06.mp3';
+
+// Niveau 7 (4 000 EUR)
+import lets_play_L07 from '../asset/sounds/lets_play_L07.mp3';
+import q_L07 from '../asset/sounds/q_L07.mp3';
+import final_L07 from '../asset/sounds/final_L07.mp3';
+import lose_L07 from '../asset/sounds/lose_L07.mp3';
+import win_L07 from '../asset/sounds/win_L07.mp3';
+
+// Niveau 8 (8 000 EUR)
+import lets_play_L08 from '../asset/sounds/lets_play_L08.mp3';
+import q_L08 from '../asset/sounds/q_L08.mp3';
+import final_L08 from '../asset/sounds/final_L08.mp3';
+import lose_L08 from '../asset/sounds/lose_L08.mp3';
+import win_L08 from '../asset/sounds/win_L08.mp3';
+
+// Niveau 9 (12 000 EUR)
+import lets_play_L09 from '../asset/sounds/lets_play_L09.mp3';
+import q_L09 from '../asset/sounds/q_L09.mp3';
+import final_L09 from '../asset/sounds/final_L09.mp3';
+import lose_L09 from '../asset/sounds/lose_L09.mp3';
+import win_L09 from '../asset/sounds/win_L09.mp3';
+
+// Niveau 10 (24 000 EUR - checkpoint)
+import lets_play_L10 from '../asset/sounds/lets_play_L10.mp3';
+import q_L10 from '../asset/sounds/q_L10.mp3';
+import final_L10 from '../asset/sounds/final_L10.mp3';
+import lose_L10 from '../asset/sounds/lose_L10.mp3';
+import win_L10 from '../asset/sounds/win_L10.mp3';
+
+// Niveau 11 (48 000 EUR)
+import lets_play_L11 from '../asset/sounds/lets_play_L11.mp3';
+import q_L11 from '../asset/sounds/q_L11.mp3';
+import final_L11 from '../asset/sounds/final_L11.mp3';
+import lose_L11 from '../asset/sounds/lose_L11.mp3';
+import win_L11 from '../asset/sounds/win_L11.mp3';
+
+// Niveau 12 (72 000 EUR)
+import lets_play_L12 from '../asset/sounds/lets_play_L12.mp3';
+import q_L12 from '../asset/sounds/q_L12.mp3';
+import final_L12 from '../asset/sounds/final_L12.mp3';
+import lose_L12 from '../asset/sounds/lose_L12.mp3';
+import win_L12 from '../asset/sounds/win_L12.mp3';
+
+// Niveau 13 (100 000 EUR)
+import lets_play_L13 from '../asset/sounds/lets_play_L13.mp3';
+import q_L13 from '../asset/sounds/q_L13.mp3';
+import final_L13 from '../asset/sounds/final_L13.mp3';
+import lose_L13 from '../asset/sounds/lose_L13.mp3';
+import win_L13 from '../asset/sounds/win_L13.mp3';
+
+// Niveau 14 (300 000 EUR)
+import lets_play_L14 from '../asset/sounds/lets_play_L14.mp3';
+import q_L14 from '../asset/sounds/q_L14.mp3';
+import final_L14 from '../asset/sounds/final_L14.mp3';
+import lose_L14 from '../asset/sounds/lose_L14.mp3';
+import win_L14 from '../asset/sounds/win_L14.mp3';
+
+// Niveau 15 (1 000 000 EUR - MILLION !)
+import lets_play_L15 from '../asset/sounds/lets_play_L15.mp3';
+import q_L15 from '../asset/sounds/q_L15.mp3';
+import final_L15 from '../asset/sounds/final_L15.mp3';
+import lose_L15 from '../asset/sounds/lose_L15.mp3';
+import win_L15 from '../asset/sounds/win_L15.mp3';
+
+// Jokers & divers
+import fifty_fifty_sfx from '../asset/sounds/fifty_fifty.mp3';
+import phone_friend_sfx from '../asset/sounds/phone_friend.mp3';
+import ask_audience_sfx from '../asset/sounds/ask_audience.mp3';
+import lifeline_ping from '../asset/sounds/lifeline_ping.mp3';
+import time_up from '../asset/sounds/time_up.mp3';
+import goodbye from '../asset/sounds/goodbye.mp3';
+
+// Mapping niveau -> sons
+// letsPlay/final sont null pour les niveaux 1-4 (partageaient le meme bed a la TV)
+const LEVEL_SOUNDS = {
+  1: { letsPlay: null, bed: q_tier1, final: null, win: win_tier1, lose: lose_tier1 },
+  2: { letsPlay: null, bed: q_tier1, final: null, win: win_tier1, lose: lose_tier1 },
+  3: { letsPlay: null, bed: q_tier1, final: null, win: win_tier1, lose: lose_tier1 },
+  4: { letsPlay: null, bed: q_tier1, final: null, win: win_tier1, lose: lose_tier1 },
+  // Palier 1 000 EUR : jingle de checkpoint dedie a la victoire
+  5: { letsPlay: null, bed: q_tier1, final: null, win: checkpoint_1k_win, lose: lose_tier1 },
+  6:  { letsPlay: lets_play_L06, bed: q_L06, final: final_L06, win: win_L06, lose: lose_L06 },
+  7:  { letsPlay: lets_play_L07, bed: q_L07, final: final_L07, win: win_L07, lose: lose_L07 },
+  8:  { letsPlay: lets_play_L08, bed: q_L08, final: final_L08, win: win_L08, lose: lose_L08 },
+  9:  { letsPlay: lets_play_L09, bed: q_L09, final: final_L09, win: win_L09, lose: lose_L09 },
+  10: { letsPlay: lets_play_L10, bed: q_L10, final: final_L10, win: win_L10, lose: lose_L10 },
+  11: { letsPlay: lets_play_L11, bed: q_L11, final: final_L11, win: win_L11, lose: lose_L11 },
+  12: { letsPlay: lets_play_L12, bed: q_L12, final: final_L12, win: win_L12, lose: lose_L12 },
+  13: { letsPlay: lets_play_L13, bed: q_L13, final: final_L13, win: win_L13, lose: lose_L13 },
+  14: { letsPlay: lets_play_L14, bed: q_L14, final: final_L14, win: win_L14, lose: lose_L14 },
+  15: { letsPlay: lets_play_L15, bed: q_L15, final: final_L15, win: win_L15, lose: lose_L15 },
+};
+
+const SFX = {
+  intro: intro_rules,
+  gameStart: game_start,
+  fiftyFifty: fifty_fifty_sfx,
+  phoneFriend: phone_friend_sfx,
+  askAudience: ask_audience_sfx,
+  lifeline: lifeline_ping,
+  timeUp: time_up,
+  goodbye,
 };
 
 class SoundManager {
   constructor() {
-    this.sounds = {};
-    this.backgroundMusic = null;
-    this.timerSound = null;
+    this.bed = null;           // Audio en cours pour le fond de question (loop)
+    this.oneshots = new Set(); // Stingers en cours (pour pouvoir tout couper)
     this.isMuted = false;
-    this.volume = 0.5;
+    this.volume = 0.7;         // Volume general
+    this.bedVolume = 0.35;     // Ratio volume musique de fond
     this.initialized = false;
   }
 
-  async init() {
-    if (this.initialized) return;
-    
-    // Pre-load all sounds
-    Object.entries(SOUND_URLS).forEach(([key, url]) => {
-      const audio = new Audio();
-      audio.src = url;
-      audio.preload = 'auto';
-      audio.volume = this.volume;
-      this.sounds[key] = audio;
-    });
-    
+  init() {
     this.initialized = true;
   }
 
-  play(soundName) {
-    if (this.isMuted || !this.sounds[soundName]) return;
-    
-    try {
-      // Clone the audio for overlapping sounds
-      const audio = this.sounds[soundName].cloneNode();
-      audio.volume = this.volume;
-      audio.play().catch(() => {
-        // Silently handle autoplay restrictions
-      });
-    } catch (e) {
-      // Silently handle errors
-    }
+  _stopAllOneshots() {
+    this.oneshots.forEach((a) => {
+      try {
+        a.pause();
+        a.currentTime = 0;
+      } catch (_) { /* ignore */ }
+    });
+    this.oneshots.clear();
   }
 
-  playBackground(level) {
-    if (this.isMuted) return;
-    
-    this.stopBackground();
-    
-    let soundKey = 'background_low';
-    if (level >= 10) soundKey = 'background_high';
-    else if (level >= 5) soundKey = 'background_mid';
-    
-    try {
-      const audio = this.sounds[soundKey];
-      if (audio) {
-        audio.loop = true;
-        audio.volume = this.volume * 0.25; // Lower volume for background
-        audio.play().catch(() => {});
-        this.backgroundMusic = audio;
+  // Joue un son court (stinger). Retourne une Promise resolue a la fin.
+  _playOnce(src, { volume, stopOthers = false } = {}) {
+    return new Promise((resolve) => {
+      if (!src || this.isMuted) return resolve();
+      try {
+        if (stopOthers) this._stopAllOneshots();
+        const audio = new Audio(src);
+        audio.volume = typeof volume === 'number' ? volume : this.volume;
+        const cleanup = () => {
+          this.oneshots.delete(audio);
+          resolve();
+        };
+        audio.addEventListener('ended', cleanup, { once: true });
+        audio.addEventListener('error', cleanup, { once: true });
+        this.oneshots.add(audio);
+        audio.play().catch(() => cleanup());
+      } catch (_) {
+        resolve();
       }
-    } catch (e) {
-      // Silently handle errors
-    }
+    });
   }
 
-  stopBackground() {
-    if (this.backgroundMusic) {
-      this.backgroundMusic.pause();
-      this.backgroundMusic.currentTime = 0;
-      this.backgroundMusic = null;
-    }
-  }
-
-  // Timer sound methods
-  startTimerTick() {
+  // --- Musique de fond (bed) ------------------------------------------------
+  playBed(level) {
+    this.stopBed();
     if (this.isMuted) return;
-    
-    this.stopTimerTick();
-    
+    const conf = LEVEL_SOUNDS[level];
+    if (!conf?.bed) return;
     try {
-      const audio = this.sounds['timer_tick'];
-      if (audio) {
-        audio.loop = true;
-        audio.volume = this.volume * 0.4;
-        audio.play().catch(() => {});
-        this.timerSound = audio;
-      }
-    } catch (e) {
-      // Silently handle errors
+      const audio = new Audio(conf.bed);
+      audio.loop = true;
+      audio.volume = this.volume * this.bedVolume;
+      audio.play().catch(() => {});
+      this.bed = audio;
+    } catch (_) { /* ignore */ }
+  }
+
+  stopBed() {
+    if (this.bed) {
+      try {
+        this.bed.pause();
+        this.bed.currentTime = 0;
+      } catch (_) { /* ignore */ }
+      this.bed = null;
     }
   }
 
-  stopTimerTick() {
-    if (this.timerSound) {
-      this.timerSound.pause();
-      this.timerSound.currentTime = 0;
-      this.timerSound = null;
+  // --- Sons par niveau ------------------------------------------------------
+  playLetsPlay(level) {
+    const conf = LEVEL_SOUNDS[level];
+    return this._playOnce(conf?.letsPlay);
+  }
+
+  playFinalAnswer(level) {
+    this.stopBed();
+    const conf = LEVEL_SOUNDS[level];
+    return this._playOnce(conf?.final, { stopOthers: true });
+  }
+
+  playCorrect(level) {
+    this.stopBed();
+    const conf = LEVEL_SOUNDS[level];
+    return this._playOnce(conf?.win, { stopOthers: true });
+  }
+
+  playWrong(level) {
+    this.stopBed();
+    const conf = LEVEL_SOUNDS[level];
+    return this._playOnce(conf?.lose, { stopOthers: true });
+  }
+
+  // --- Sons generiques ------------------------------------------------------
+  playIntro()        { return this._playOnce(SFX.intro); }
+  playGameStart()    { return this._playOnce(SFX.gameStart); }
+  playFiftyFifty()   { return this._playOnce(SFX.fiftyFifty); }
+  playPhoneFriend()  { return this._playOnce(SFX.phoneFriend); }
+  playAskAudience()  { return this._playOnce(SFX.askAudience); }
+  playLifeline()     { return this._playOnce(SFX.lifeline); }
+  playTimeUp()       { this.stopBed(); return this._playOnce(SFX.timeUp, { stopOthers: true }); }
+  playGoodbye()      { return this._playOnce(SFX.goodbye); }
+
+  // --- Compat avec l'ancienne API (play("nom")) -----------------------------
+  // Les noms depourvus de contexte de niveau sont mappes ici ; les sons
+  // dependant du niveau doivent etre appeles via playCorrect/playWrong/etc.
+  play(name) {
+    switch (name) {
+      case 'fifty_fifty':  return this.playFiftyFifty();
+      case 'phone_friend': return this.playPhoneFriend();
+      case 'ask_audience': return this.playAskAudience();
+      case 'game_start':   return this.playGameStart();
+      case 'game_over':    return this.playGoodbye();
+      case 'timer_expired':return this.playTimeUp();
+      case 'million':      return this.playCorrect(15);
+      case 'select':       // pas de SFX : on reste silencieux
+      case 'hover':
+      case 'click':
+      case 'final_answer': // doit etre appele via playFinalAnswer(level)
+      case 'correct':      // doit etre appele via playCorrect(level)
+      case 'wrong':        // doit etre appele via playWrong(level)
+      case 'level_up':
+      case 'checkpoint':
+      case 'timer_tick':
+      case 'timer_warning':
+      default:
+        return Promise.resolve();
     }
   }
 
-  playTimerWarning() {
-    this.play('timer_warning');
-  }
+  // Back-compat : anciennes methodes utilisees par Game.jsx
+  playBackground(level) { this.playBed(level); }
+  stopBackground()      { this.stopBed(); }
+  // Pas d'asset de tick/warning : les beds de question assurent la tension
+  startTimerTick()      { /* no-op */ }
+  stopTimerTick()       { /* no-op */ }
+  playTimerWarning()    { /* no-op */ }
+  playTimerExpired()    { this.playTimeUp(); }
 
-  playTimerExpired() {
-    this.stopTimerTick();
-    this.play('timer_expired');
-  }
-
+  // --- Mute / volume --------------------------------------------------------
   setMuted(muted) {
     this.isMuted = muted;
     if (muted) {
-      this.stopBackground();
-      this.stopTimerTick();
-    }
-  }
-
-  setVolume(vol) {
-    this.volume = Math.max(0, Math.min(1, vol));
-    Object.values(this.sounds).forEach(audio => {
-      audio.volume = this.volume;
-    });
-    if (this.backgroundMusic) {
-      this.backgroundMusic.volume = this.volume * 0.25;
-    }
-    if (this.timerSound) {
-      this.timerSound.volume = this.volume * 0.4;
+      this.stopBed();
+      this._stopAllOneshots();
     }
   }
 
   toggleMute() {
     this.setMuted(!this.isMuted);
     return this.isMuted;
+  }
+
+  setVolume(v) {
+    this.volume = Math.max(0, Math.min(1, v));
+    if (this.bed) this.bed.volume = this.volume * this.bedVolume;
+    this.oneshots.forEach((a) => { a.volume = this.volume; });
   }
 }
 
