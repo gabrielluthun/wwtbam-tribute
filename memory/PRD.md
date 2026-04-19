@@ -126,3 +126,30 @@ L'utilisateur souhaite créer une application "Qui Veut Gagner des Millions" fid
 - `/app/frontend/src/utils/sounds.js` - Nouveaux sons + gestion timer
 - `/app/frontend/src/pages/SetupQuestions.jsx` - Import/Export + Timer settings
 - `/app/frontend/src/pages/Game.jsx` - Logique timer + affichage
+
+## Update 19 Jan 2026 - Bibliothèque de thèmes + Mode aléatoire
+
+### Bibliothèque de 7 thèmes ✅
+- 🧠 Culture Générale (cyan)
+- 🏆 Sport (orange)
+- 🎬 Cinéma (rose)
+- 🎵 Musique (violet)
+- ⚛️ Sciences (vert)
+- 🎮 Jeux Vidéo (turquoise)
+- ✨ Animés & Manga (rose vif)
+
+Chaque thème contient 15 questions ordonnées du facile au difficile,
+correspondant à la progression des paliers (100€ → 1 000 000€).
+
+### Mode "Mélanger l'ordre" ✅
+- Switch dans le panneau Options
+- Mélange aléatoire des 15 questions (algorithme Fisher-Yates)
+- Les paliers de gains restent fixes, seul l'ordre des questions change
+- Badge "Mélangé" visible dans le header quand activé
+
+### Nouveaux fichiers
+- `/app/frontend/src/utils/themes.js` - 7 thèmes + helpers (shuffle)
+- `/app/frontend/src/components/ThemeSelector.jsx` - Modal de sélection
+
+### Fichiers modifiés
+- `/app/frontend/src/pages/SetupQuestions.jsx` - Intégration thèmes + shuffle

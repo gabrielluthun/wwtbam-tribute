@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings } from 'lucide-react';
+import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Switch } from '../components/ui/switch';
+import { ThemeSelector } from '../components/ThemeSelector';
 import { MONEY_LEVELS, createEmptyQuestion, ANSWER_LETTERS } from '../utils/gameData';
+import { getThemeQuestions, shuffleQuestions, THEMES } from '../utils/themes';
 
 export const SetupQuestions = () => {
   const navigate = useNavigate();
@@ -22,6 +24,13 @@ export const SetupQuestions = () => {
   // Timer settings
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30);
+  
+  // Shuffle questions option
+  const [shuffleEnabled, setShuffleEnabled] = useState(false);
+  
+  // Theme selector
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [loadedTheme, setLoadedTheme] = useState(null);
   
   // Import/Export state
   const [showImportExport, setShowImportExport] = useState(false);
@@ -177,7 +186,10 @@ export const SetupQuestions = () => {
 
   const startGame = () => {
     if (validateAllQuestions()) {
-      sessionStorage.setItem('gameQuestions', JSON.stringify(questions));
+      // Apply shuffle if enabled
+      const finalQuestions = shuffleEnabled ? shuffleQuestions(questions) : questions;
+      
+      sessionStorage.setItem('gameQuestions', JSON.stringify(finalQuestions));
       sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
       sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
       sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
@@ -185,6 +197,20 @@ export const SetupQuestions = () => {
         sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
       }
       navigate('/game');
+    }
+  };
+
+  // Load a theme
+  const handleSelectTheme = (themeId) => {
+    const themeQuestions = getThemeQuestions(themeId);
+    if (themeQuestions) {
+      setQuestions(themeQuestions);
+      setLoadedTheme(THEMES[themeId]);
+      setErrors({});
+      setCurrentEditIndex(0);
+      setShowThemeSelector(false);
+      setImportSuccess(`Thème "${THEMES[themeId].name}" chargé avec succès !`);
+      setTimeout(() => setImportSuccess(''), 3000);
     }
   };
 
@@ -208,12 +234,43 @@ export const SetupQuestions = () => {
             <h1 className="text-2xl sm:text-3xl font-bold font-['Chivo'] text-white">
               Créer vos questions
             </h1>
-            <p className="text-[#D8D8E8] text-sm font-medium">
-              {completedCount}/15 questions complètes
-            </p>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <p className="text-[#D8D8E8] text-sm font-medium">
+                {completedCount}/15 questions complètes
+              </p>
+              {loadedTheme && (
+                <span 
+                  className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style={{ 
+                    background: `${loadedTheme.color}20`,
+                    color: loadedTheme.color,
+                    border: `1px solid ${loadedTheme.color}40`,
+                  }}
+                  data-testid="loaded-theme-badge"
+                >
+                  {loadedTheme.name}
+                </span>
+              )}
+              {shuffleEnabled && (
+                <span 
+                  className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E91E63]/20 text-[#E91E63] border border-[#E91E63]/40"
+                  data-testid="shuffle-badge"
+                >
+                  Mélangé
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
+            <button
+              className="btn-secondary flex items-center gap-2 text-sm"
+              onClick={() => setShowThemeSelector(true)}
+              data-testid="open-theme-selector"
+            >
+              <Library size={16} />
+              Thèmes
+            </button>
             <button
               className="btn-secondary flex items-center gap-2 text-sm"
               onClick={() => setShowImportExport(!showImportExport)}
@@ -317,6 +374,29 @@ export const SetupQuestions = () => {
                       Le temps s'écoule pendant chaque question. Si le temps expire, la partie est perdue.
                     </p>
                   )}
+                </div>
+                
+                {/* Shuffle Order */}
+                <div>
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Shuffle size={18} className="text-[#E91E63]" />
+                    Mélanger l'ordre
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={shuffleEnabled}
+                      onCheckedChange={setShuffleEnabled}
+                      data-testid="shuffle-toggle"
+                    />
+                    <span className="text-[#B0B0C0] text-sm">
+                      {shuffleEnabled ? 'Questions mélangées' : 'Ordre original'}
+                    </span>
+                  </div>
+                  <p className="text-[#B0B0C0] text-xs mt-2">
+                    {shuffleEnabled 
+                      ? 'Les 15 questions seront posées dans un ordre aléatoire. Chaque partie sera différente !'
+                      : 'Les questions seront posées dans l\'ordre que vous avez défini.'}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -494,6 +574,13 @@ export const SetupQuestions = () => {
           </div>
         </div>
       </div>
+
+      {/* Theme Selector Modal */}
+      <ThemeSelector
+        isOpen={showThemeSelector}
+        onClose={() => setShowThemeSelector(false)}
+        onSelectTheme={handleSelectTheme}
+      />
     </div>
   );
 };
