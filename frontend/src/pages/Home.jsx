@@ -7,15 +7,6 @@ import { soundManager } from '../utils/sounds';
 export const Home = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    soundManager.init();
-    soundManager.playIntro();
-
-    return () => {
-      soundManager.stopBackground();
-    };
-  }, []);
-
   return (
     <div className="min-h-screen studio-bg flex flex-col items-center justify-center p-6">
       {/* Overlay for better text readability */}
@@ -67,7 +58,7 @@ export const Home = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          Créez vos propres questions et défiez vos amis dans ce jeu mythique !
+          Gagnez 1 million d'euros <i>(virtuellement)</i> en répondant aux 15 questions !
         </motion.p>
         
         {/* Buttons */}
@@ -111,11 +102,21 @@ export const Home = () => {
           <div className="flex items-start gap-3">
             <Info size={20} className="text-[#00E5FF] flex-shrink-0 mt-1" />
             <p className="text-[#D8D8E8] text-sm text-left">
-              <span className="text-white font-semibold">Comment jouer :</span> Créez 15 questions avec 4 réponses chacune (1 correcte, 3 fausses). 
-              Utilisez vos 3 jokers stratégiquement pour atteindre le million !
+              <span className="text-white font-semibold">Comment jouer :</span> Jouez au mode de jeu classique en solo, en multijoueur ou créez 
+              vos propres questions avec des thèmes personnalisés.
             </p>
           </div>
         </motion.div>
+
+        <motion.p
+          className="mt-8 text-xs italic text-[#B0B0C0]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3 }}
+          data-testid="home-created-by"
+        >
+          Created by gabri_ailes and Shivii, just for fun :D
+        </motion.p>
       </div>
     </div>
   );
