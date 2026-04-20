@@ -232,7 +232,7 @@ class SoundManager {
 
   // --- Sons generiques ------------------------------------------------------
   playIntro()        { return this._playOnce(SFX.intro); }
-  playGameStart()    { return this._playOnce(SFX.gameStart); }
+  playGameStart()    { return Promise.resolve(); }
   playFiftyFifty()   { return this._playOnce(SFX.fiftyFifty); }
   playPhoneFriend()  { return this._playOnce(SFX.phoneFriend); }
   playAskAudience()  { return this._playOnce(SFX.askAudience); }
