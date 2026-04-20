@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Play, Users, Info } from 'lucide-react';
-import { soundManager } from '../utils/sounds';
 
 export const Home = () => {
   const navigate = useNavigate();

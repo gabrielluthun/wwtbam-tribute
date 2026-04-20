@@ -7,7 +7,6 @@
 // win / lose.
 
 import intro_rules from '../asset/sounds/intro_rules.mp3';
-import game_start from '../asset/sounds/game_start.mp3';
 
 // Tier 1 - niveaux 1 a 5
 import q_tier1 from '../asset/sounds/q_tier1.mp3';
@@ -116,7 +115,6 @@ const LEVEL_SOUNDS = {
 
 const SFX = {
   intro: intro_rules,
-  gameStart: game_start,
   fiftyFifty: fifty_fifty_sfx,
   phoneFriend: phone_friend_sfx,
   askAudience: ask_audience_sfx,
@@ -264,7 +262,6 @@ class SoundManager {
   }
 
   // --- Sons generiques ------------------------------------------------------
-  playIntro()        { return this._playOnce(SFX.intro); }
   playGameStart()    { return Promise.resolve(); }
   playFiftyFifty()   { return this._playOnce(SFX.fiftyFifty); }
   playPhoneFriend()  { return this._playOnce(SFX.phoneFriend); }

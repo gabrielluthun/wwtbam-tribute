@@ -10,7 +10,6 @@ import {
   getGuaranteedAmount, 
   getPhoneResponse, 
   generateAudienceResults,
-  ANSWER_LETTERS 
 } from '../utils/gameData';
 import { soundManager } from '../utils/sounds';
 
