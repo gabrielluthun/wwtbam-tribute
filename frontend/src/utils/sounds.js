@@ -130,6 +130,7 @@ class SoundManager {
     this.bed = null;           // Audio en cours pour le fond de question (loop)
     this.bedSrc = null;        // Source du bed en cours (pour eviter les redemarrages inutiles)
     this.oneshots = new Set(); // Stingers en cours (pour pouvoir tout couper)
+    this.oneShotCache = new Map(); // Cache d'instances Audio pour reduire la latence au declenchement
     this.isMuted = false;
     this.volume = 0.7;         // Volume general
     this.bedVolume = 0.35;     // Ratio volume musique de fond
@@ -137,7 +138,33 @@ class SoundManager {
   }
 
   init() {
+    if (this.initialized) return;
     this.initialized = true;
+    this._preloadOneShots();
+  }
+
+  _preloadOneShots() {
+    const sources = new Set();
+
+    Object.values(LEVEL_SOUNDS).forEach((conf) => {
+      if (conf?.letsPlay) sources.add(conf.letsPlay);
+      if (conf?.final) sources.add(conf.final);
+      if (conf?.win) sources.add(conf.win);
+      if (conf?.lose) sources.add(conf.lose);
+    });
+
+    Object.values(SFX).forEach((src) => {
+      if (src) sources.add(src);
+    });
+
+    sources.forEach((src) => {
+      try {
+        const audio = new Audio(src);
+        audio.preload = 'auto';
+        audio.load();
+        this.oneShotCache.set(src, audio);
+      } catch (_) { }
+    });
   }
 
   _stopAllOneshots() {
@@ -156,7 +183,13 @@ class SoundManager {
       if (!src || this.isMuted) return resolve();
       try {
         if (stopOthers) this._stopAllOneshots();
-        const audio = new Audio(src);
+        let audio = this.oneShotCache.get(src);
+        if (!audio) {
+          audio = new Audio(src);
+          audio.preload = 'auto';
+          this.oneShotCache.set(src, audio);
+        }
+        audio.currentTime = 0;
         audio.volume = typeof volume === 'number' ? volume : this.volume;
         const cleanup = () => {
           this.oneshots.delete(audio);
