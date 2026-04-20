@@ -631,7 +631,7 @@ export const Game = () => {
           <motion.div
             className="question-frame p-6 sm:p-8 mb-6 max-w-4xl mx-auto w-full"
             key={currentLevel}
-            initial={{ opacity: 1, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
           >
             <p className="text-white text-lg sm:text-xl lg:text-2xl text-center font-medium" data-testid="question-text">

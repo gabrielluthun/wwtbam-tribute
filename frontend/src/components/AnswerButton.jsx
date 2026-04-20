@@ -32,9 +32,9 @@ export const AnswerButton = ({
       className={`${getStateClasses()} hexagon-btn w-full py-4 px-6 flex items-center gap-4 text-left ${disabled ? 'disabled' : ''}`}
       onClick={() => !disabled && state !== 'eliminated' && onClick(index)}
       disabled={disabled || state === 'eliminated'}
-      initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+      initial={false}
       animate={{ opacity: state === 'eliminated' ? 0.3 : 1, x: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+      transition={{ duration: 0.2 }}
       whileHover={!disabled && state === 'default' ? { scale: 1.02 } : {}}
       whileTap={!disabled && state === 'default' ? { scale: 0.98 } : {}}
     >
