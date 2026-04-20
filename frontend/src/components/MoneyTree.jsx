@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { MONEY_LEVELS } from '../utils/gameData';
 
-export const MoneyTree = ({ currentLevel, isOpen, onClose }) => {
+export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
   return (
     <>
       {/* Mobile overlay */}
@@ -42,13 +42,16 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose }) => {
             const isCheckpoint = level.checkpoint;
             
             return (
-              <motion.div
+              <motion.button
                 key={level.level}
+                type="button"
                 data-testid={`money-level-${level.level}`}
                 className={`relative flex items-center justify-between py-2 px-3 rounded 
                   ${isCurrent ? 'bg-[#FFD700]/20' : ''}
                   ${isCheckpoint ? 'border-l-2 border-[#00E5FF]' : ''}
+                  ${onSelectLevel ? 'w-full text-left cursor-pointer hover:bg-white/10' : 'w-full'}
                 `}
+                onClick={() => onSelectLevel?.(level.level)}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.03 }}
@@ -74,7 +77,7 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose }) => {
                 `}>
                   {level.display}
                 </span>
-              </motion.div>
+              </motion.button>
             );
           })}
         </div>
