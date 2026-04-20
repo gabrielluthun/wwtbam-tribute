@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, X, Check } from 'lucide-react';
+import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, Flame, Heart, X, Check } from 'lucide-react';
 import { getThemesList } from '../utils/themes';
 
 // Map icon names to Lucide components
@@ -11,6 +11,8 @@ const ICON_MAP = {
   Atom,
   Gamepad2,
   Sparkles,
+  Flame,
+  Heart,
 };
 
 export const ThemeSelector = ({ isOpen, onClose, onSelectTheme }) => {
@@ -79,6 +81,20 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme }) => {
                   whileTap={{ scale: 0.98 }}
                   data-testid={`theme-${theme.id}`}
                 >
+                  {/* Badge 18+ pour les themes reserves aux adultes */}
+                  {theme.adult && (
+                    <span
+                      className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-xs font-black tracking-wider"
+                      style={{
+                        color: theme.color,
+                        borderColor: theme.color,
+                        backgroundColor: `${theme.color}20`,
+                        border: `1px solid ${theme.color}`,
+                      }}
+                    >
+                      18+
+                    </span>
+                  )}
                   {/* Icon */}
                   <div 
                     className="w-14 h-14 rounded-full flex items-center justify-center mb-4"

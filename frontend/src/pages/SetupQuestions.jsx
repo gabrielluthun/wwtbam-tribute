@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library } from 'lucide-react';
+import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library, Eye } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Switch } from '../components/ui/switch';
 import { ThemeSelector } from '../components/ThemeSelector';
@@ -27,6 +27,9 @@ export const SetupQuestions = () => {
   
   // Shuffle questions option
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
+  
+  // Reveal mode : si activee, l'animateur attend un clic avant de reveler la reponse
+  const [manualReveal, setManualReveal] = useState(false);
   
   // Theme selector
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -193,6 +196,7 @@ export const SetupQuestions = () => {
       sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
       sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
       sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
+      sessionStorage.setItem('manualReveal', JSON.stringify(manualReveal));
       if (isMultiplayer) {
         sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
       }
@@ -396,6 +400,29 @@ export const SetupQuestions = () => {
                     {shuffleEnabled 
                       ? 'Les 15 questions seront posées dans un ordre aléatoire. Chaque partie sera différente !'
                       : 'Les questions seront posées dans l\'ordre que vous avez défini.'}
+                  </p>
+                </div>
+
+                {/* Manual reveal (suspense) */}
+                <div>
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Eye size={18} className="text-[#FFD700]" />
+                    Révélation manuelle
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={manualReveal}
+                      onCheckedChange={setManualReveal}
+                      data-testid="manual-reveal-toggle"
+                    />
+                    <span className="text-[#B0B0C0] text-sm">
+                      {manualReveal ? 'Mode animateur (suspense)' : 'Validation automatique'}
+                    </span>
+                  </div>
+                  <p className="text-[#B0B0C0] text-xs mt-2">
+                    {manualReveal
+                      ? 'Après "C\'est mon dernier mot !", un bouton "Révéler la réponse" apparaît : gardez le suspense aussi longtemps que vous le souhaitez.'
+                      : 'La bonne ou mauvaise réponse est révélée automatiquement après validation.'}
                   </p>
                 </div>
               </div>
