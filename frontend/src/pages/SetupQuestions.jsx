@@ -229,6 +229,27 @@ export const SetupQuestions = () => {
     }
   };
 
+  const handlePlayTheme = (themeId) => {
+    const themeQuestions = getThemeQuestions(themeId);
+    const selectedTheme = getThemeById(themeId);
+    if (!themeQuestions) return;
+
+    const finalQuestions = shuffleEnabled ? shuffleQuestions(themeQuestions) : themeQuestions;
+
+    sessionStorage.setItem('gameQuestions', JSON.stringify(finalQuestions));
+    sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
+    sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
+    sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
+    sessionStorage.setItem('manualReveal', JSON.stringify(manualReveal));
+    if (isMultiplayer) {
+      sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
+    }
+
+    setLoadedTheme(selectedTheme);
+    setShowThemeSelector(false);
+    navigate('/game');
+  };
+
   const openSaveThemeModal = () => {
     setThemeName(loadedTheme?.isCustom ? loadedTheme.name : '');
     setThemeDescription(loadedTheme?.isCustom ? loadedTheme.description : '');
@@ -667,6 +688,7 @@ export const SetupQuestions = () => {
         isOpen={showThemeSelector}
         onClose={() => setShowThemeSelector(false)}
         onSelectTheme={handleSelectTheme}
+        onPlayTheme={handlePlayTheme}
         onRenameTheme={handleRenameTheme}
         onDeleteTheme={handleDeleteTheme}
       />
