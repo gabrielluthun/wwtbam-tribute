@@ -6,18 +6,11 @@
 /* Question container hexagon frame */
 .question-frame {
   background: linear-gradient(180deg, rgba(26, 26, 58, 0.9) 0%, rgba(11, 11, 26, 0.95) 100%);
-  border: 2px solid rgba(0, 229, 255, 0.4);
+  background-color: rgba(11, 11, 26, 0.95);
+  border: 2px solid rgba(0, 229, 255, 0.28);
   border-radius: 8px;
   position: relative;
-}
-
-.question-frame::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
-  border-radius: 8px;
-  z-index: -1;
+  overflow: hidden;
 }
 
 /* Answer button styles */
@@ -115,6 +108,12 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1rem;
+}
+
+.theme-card {
+  /* Fallback paint to avoid transient flash before gradient is composited */
+  background-color: rgba(11, 11, 26, 0.85);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Input styling */

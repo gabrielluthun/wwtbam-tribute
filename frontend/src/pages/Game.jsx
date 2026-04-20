@@ -27,13 +27,13 @@ const GAME_STATES = {
 };
 
 // Pauses "respiration" entre les sons pour fluidifier les transitions TV
-const DRAMATIC_PAUSE_MS = 500;  // Pause dramatique apres "Final Answer"
+const DRAMATIC_PAUSE_MS = 0;  // Pause dramatique apres "Final Answer"
 const OUTCOME_MIN_MS = 2500;     // Duree minimale de l'ecran resultat
 const OUTCOME_MAX_MS = 10000;     // Duree maximale (coupe les stingers longs)
 const LETSPLAY_MIN_MS = 1500;    // Duree minimale d'affichage de "Pour x€"
 const LETSPLAY_MAX_MS = 4500;    // Duree max d'attente du "Let's Play"
 const INTRO_MAX_MS = 3500;       // Duree max d'attente du jingle d'ouverture
-const SILENCE_BETWEEN_MS = 10;  // Petit silence entre deux sons
+const SILENCE_BETWEEN_MS = 0;  // Petit silence entre deux sons
 const TRANSITION_OVERLAY_LEAD_MS = 300 ; // Laisse l'overlay apparaitre avant la nouvelle question
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -223,11 +223,8 @@ export const Game = () => {
     
     setGameState(GAME_STATES.REVEALING);
     // Jingle "Final Answer" du niveau (coupe le bed musical)
-    const finalPromise = soundManager.playFinalAnswer(currentLevel);
+    soundManager.playFinalAnswer(currentLevel);
     soundManager.stopTimerTick();
-    
-    // Pause dramatique : on laisse le stinger + l'animation respirer
-    await waitForSound(finalPromise, DRAMATIC_PAUSE_MS, DRAMATIC_PAUSE_MS + 1500);
     
     // Mode "animateur" : on attend que le joueur/presentateur clique sur "Reveler"
     if (isManualRevealActive) {
@@ -277,12 +274,12 @@ export const Game = () => {
       setTimerPaused(false);
       soundManager.playBed(nextLevel);
     } else {
-      const losePromise = soundManager.playWrong(currentLevel);
       setAnswerStates(prev => prev.map((s, i) => {
         if (i === selectedAnswer) return 'wrong';
         if (i === currentQuestion.correctIndex) return 'correct';
         return s;
       }));
+      const losePromise = soundManager.playWrong(currentLevel);
       
       if (gameMode === 'multi') {
         setScores(prev => {
@@ -634,7 +631,7 @@ export const Game = () => {
           <motion.div
             className="question-frame p-6 sm:p-8 mb-6 max-w-4xl mx-auto w-full"
             key={currentLevel}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <p className="text-white text-lg sm:text-xl lg:text-2xl text-center font-medium" data-testid="question-text">

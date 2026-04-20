@@ -102,7 +102,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       <motion.div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
         initial={{ opacity: 0 }}
@@ -148,10 +148,11 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                   className="theme-card relative overflow-hidden rounded-xl p-5 text-left transition-all border-2"
                   style={{
                     borderColor: `${theme.color}40`,
+                    backgroundColor: 'rgba(11, 11, 26, 0.85)',
                     background: `linear-gradient(135deg, ${theme.color}15 0%, rgba(11, 11, 26, 0.8) 100%)`,
                   }}
                   onClick={() => handleCardClick(theme)}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 1, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   whileHover={{ 
@@ -285,7 +286,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
           )}
         </motion.div>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {themeToPlay && (
             <motion.div
               className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
@@ -296,14 +297,12 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
               data-testid="play-theme-modal"
             >
               <motion.div
-                className="relative w-full max-w-md rounded-2xl border border-[#FFD700]/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_45px_rgba(255,215,0,0.2)]"
+                className="relative w-full max-w-md rounded-2xl border border-[#FFD700]/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_24px_rgba(255,215,0,0.18)] overflow-hidden"
                 initial={{ scale: 0.92, opacity: 0, y: 12 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.92, opacity: 0, y: 12 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#FFD700]/30 via-[#00E5FF]/20 to-[#8B5CF6]/30 blur-md -z-10" />
-
                 <h3 className="text-xl font-bold font-['Chivo'] text-white">Jouer ce thème ?</h3>
                 <p className="mt-2 text-sm text-[#D8D8E8]">
                   Voulez-vous commencer immédiatement avec le thème{' '}
@@ -340,14 +339,12 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
               data-testid="delete-theme-modal"
             >
               <motion.div
-                className="relative w-full max-w-md rounded-2xl border border-red-400/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_45px_rgba(255,80,120,0.2)]"
+                className="relative w-full max-w-md rounded-2xl border border-red-400/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_24px_rgba(255,80,120,0.18)] overflow-hidden"
                 initial={{ scale: 0.92, opacity: 0, y: 12 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.92, opacity: 0, y: 12 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-red-400/30 via-pink-400/20 to-purple-400/30 blur-md -z-10" />
-
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full border border-red-400/50 bg-red-500/15">
                     <Trash2 size={18} className="text-red-300" />
