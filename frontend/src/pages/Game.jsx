@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Volume2, VolumeX, Menu, Home, RotateCcw, Clock } from 'lucide-react';
+import { Volume2, VolumeX, Menu, Home, RotateCcw, Clock, Eye } from 'lucide-react';
 import { AnswerButton } from '../components/AnswerButton';
 import { MoneyTree } from '../components/MoneyTree';
 import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers';
@@ -19,6 +19,7 @@ const GAME_STATES = {
   PLAYING: 'playing',
   SELECTED: 'selected',
   REVEALING: 'revealing',
+  AWAITING_REVEAL: 'awaiting_reveal', // Mode manuel : on attend que l'animateur revele
   TRANSITION: 'transition',
   WON: 'won',
   LOST: 'lost',
@@ -68,6 +69,11 @@ export const Game = () => {
   const [timerPaused, setTimerPaused] = useState(false);
   const timerRef = useRef(null);
   
+  // Reveal mode : si vrai, un bouton "Reveler" apparait au lieu d'une reveal auto
+  const [manualReveal, setManualReveal] = useState(false);
+  // Promise resolver utilise pour reprendre le flux async quand le bouton est clique
+  const revealResolverRef = useRef(null);
+  
   // UI state
   const [isMuted, setIsMuted] = useState(false);
   const [showMoneyTree, setShowMoneyTree] = useState(false);
@@ -106,6 +112,12 @@ export const Game = () => {
         setTimerDuration(duration);
         setTimeRemaining(duration);
       }
+    }
+    
+    // Mode de revelation (automatique par defaut)
+    const storedManualReveal = sessionStorage.getItem('manualReveal');
+    if (storedManualReveal) {
+      setManualReveal(JSON.parse(storedManualReveal));
     }
     
     // Initialisation : passage en INTRO avec jingle d'ouverture puis gameplay
@@ -202,6 +214,17 @@ export const Game = () => {
     // Pause dramatique : on laisse le stinger + l'animation respirer
     await waitForSound(finalPromise, DRAMATIC_PAUSE_MS, DRAMATIC_PAUSE_MS + 1500);
     
+    // Mode "animateur" : on attend que le joueur/presentateur clique sur "Reveler"
+    if (manualReveal) {
+      setGameState(GAME_STATES.AWAITING_REVEAL);
+      await new Promise((resolve) => {
+        revealResolverRef.current = resolve;
+      });
+      revealResolverRef.current = null;
+      setGameState(GAME_STATES.REVEALING);
+      await sleep(SILENCE_BETWEEN_MS);
+    }
+    
     const isCorrect = selectedAnswer === currentQuestion.correctIndex;
     
     if (isCorrect) {
@@ -257,7 +280,14 @@ export const Game = () => {
       await sleep(OUTCOME_MIN_MS + 500);
       setGameState(GAME_STATES.LOST);
     }
-  }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney]);
+  }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney, manualReveal]);
+
+  // Declenche la revelation en mode manuel (resout la promise attendue par le flux)
+  const handleRevealAnswer = useCallback(() => {
+    if (gameState !== GAME_STATES.AWAITING_REVEAL) return;
+    const resolver = revealResolverRef.current;
+    if (resolver) resolver();
+  }, [gameState]);
 
   // Cancel selection
   const handleCancelSelection = useCallback(() => {
@@ -625,6 +655,32 @@ export const Game = () => {
                 >
                   C'est mon dernier mot !
                 </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Bouton de revelation manuelle (mode animateur) */}
+          <AnimatePresence>
+            {gameState === GAME_STATES.AWAITING_REVEAL && (
+              <motion.div
+                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <p className="text-[#B0B0C0] text-sm text-center italic">
+                  L'animateur garde le suspense...
+                </p>
+                <motion.button
+                  className="btn-primary flex items-center justify-center gap-2 px-8"
+                  onClick={handleRevealAnswer}
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.6 }}
+                  data-testid="reveal-answer-btn"
+                >
+                  <Eye size={20} />
+                  Révéler la réponse
+                </motion.button>
               </motion.div>
             )}
           </AnimatePresence>

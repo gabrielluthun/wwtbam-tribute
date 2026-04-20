@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, X, Check, Palette, Pencil, Trash2 } from 'lucide-react';
+import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, Flame, Heart, X, Check, Palette, Pencil, Trash2 } from 'lucide-react';
 import { getThemesList } from '../utils/themes';
 
 // Map icon names to Lucide components
@@ -13,6 +13,8 @@ const ICON_MAP = {
   Gamepad2,
   Sparkles,
   Palette,
+  Flame,
+  Heart,
 };
 
 export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, onDeleteTheme }) => {
