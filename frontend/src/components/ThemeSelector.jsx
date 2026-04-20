@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, X, Check } from 'lucide-react';
+import { Brain, Trophy, Film, Music, Atom, Gamepad2, Sparkles, X, Check, Palette, Pencil, Trash2 } from 'lucide-react';
 import { getThemesList } from '../utils/themes';
 
 // Map icon names to Lucide components
@@ -11,12 +12,58 @@ const ICON_MAP = {
   Atom,
   Gamepad2,
   Sparkles,
+  Palette,
 };
 
-export const ThemeSelector = ({ isOpen, onClose, onSelectTheme }) => {
+export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, onDeleteTheme }) => {
+  const [editingThemeId, setEditingThemeId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editColor, setEditColor] = useState('#8B5CF6');
+  const [editError, setEditError] = useState('');
+
   if (!isOpen) return null;
 
   const themes = getThemesList();
+  const editingTheme = themes.find((theme) => theme.id === editingThemeId) || null;
+
+  const openEditTheme = (theme) => {
+    setEditingThemeId(theme.id);
+    setEditName(theme.name || '');
+    setEditDescription(theme.description || '');
+    setEditColor(theme.color || '#8B5CF6');
+    setEditError('');
+  };
+
+  const closeEditTheme = () => {
+    setEditingThemeId(null);
+    setEditError('');
+  };
+
+  const handleRenameTheme = () => {
+    if (!editingTheme || !onRenameTheme) return;
+    try {
+      onRenameTheme({
+        themeId: editingTheme.id,
+        name: editName,
+        description: editDescription,
+        color: editColor,
+      });
+      closeEditTheme();
+    } catch (error) {
+      setEditError(error.message || 'Impossible de modifier ce thème.');
+    }
+  };
+
+  const handleDeleteTheme = (theme) => {
+    if (!onDeleteTheme) return;
+    const confirmed = window.confirm(`Supprimer le thème "${theme.name}" ?`);
+    if (!confirmed) return;
+    onDeleteTheme(theme.id);
+    if (editingThemeId === theme.id) {
+      closeEditTheme();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -79,6 +126,33 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme }) => {
                   whileTap={{ scale: 0.98 }}
                   data-testid={`theme-${theme.id}`}
                 >
+                  {theme.isCustom && (
+                    <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+                      <button
+                        className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditTheme(theme);
+                        }}
+                        title="Renommer le thème"
+                        data-testid={`edit-theme-${theme.id}`}
+                      >
+                        <Pencil size={14} className="text-white" />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTheme(theme);
+                        }}
+                        title="Supprimer le thème"
+                        data-testid={`delete-theme-${theme.id}`}
+                      >
+                        <Trash2 size={14} className="text-white" />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Icon */}
                   <div 
                     className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
@@ -104,12 +178,60 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme }) => {
                   {/* Question count */}
                   <div className="flex items-center gap-2 text-xs text-[#B0B0C0]">
                     <Check size={14} style={{ color: theme.color }} />
-                    <span>15 questions prêtes</span>
+                    <span>{theme.isCustom ? 'Thème personnalisé' : '15 questions prêtes'}</span>
                   </div>
                 </motion.button>
               );
             })}
           </div>
+
+          {editingTheme && (
+            <div className="mt-6 p-4 rounded-lg bg-[#8B5CF6]/10 border border-[#8B5CF6]/30">
+              <h3 className="text-white font-semibold mb-3">Modifier un thème personnalisé</h3>
+              <div className="space-y-3">
+                <input
+                  value={editName}
+                  onChange={(e) => {
+                    setEditName(e.target.value);
+                    setEditError('');
+                  }}
+                  className="game-input w-full"
+                  placeholder="Nom du thème"
+                  data-testid="rename-theme-name"
+                />
+                <input
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="game-input w-full"
+                  placeholder="Description (optionnel)"
+                  data-testid="rename-theme-description"
+                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={editColor}
+                    onChange={(e) => setEditColor(e.target.value)}
+                    className="h-10 w-16 rounded border border-white/20 bg-transparent cursor-pointer"
+                    data-testid="rename-theme-color"
+                  />
+                  <span className="text-[#D8D8E8] text-sm font-mono uppercase">{editColor}</span>
+                </div>
+              </div>
+              {editError && (
+                <p className="text-red-400 text-sm mt-3" data-testid="rename-theme-error">
+                  {editError}
+                </p>
+              )}
+              <div className="mt-4 flex items-center justify-end gap-3">
+                <button className="btn-secondary text-sm" onClick={closeEditTheme}>
+                  Annuler
+                </button>
+                <button className="btn-primary text-sm" onClick={handleRenameTheme} data-testid="rename-theme-confirm">
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Footer note */}
           <div className="mt-6 p-4 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30">
