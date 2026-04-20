@@ -28,12 +28,13 @@ const GAME_STATES = {
 };
 
 // Pauses "respiration" entre les sons pour fluidifier les transitions TV
-const DRAMATIC_PAUSE_MS = 3000;  // Pause dramatique apres "Final Answer"
+const DRAMATIC_PAUSE_MS = 500;  // Pause dramatique apres "Final Answer"
 const OUTCOME_MIN_MS = 2500;     // Duree minimale de l'ecran resultat
-const OUTCOME_MAX_MS = 5000;     // Duree maximale (coupe les stingers longs)
+const OUTCOME_MAX_MS = 10000;     // Duree maximale (coupe les stingers longs)
+const LETSPLAY_MIN_MS = 1500;    // Duree minimale d'affichage de "Pour x€"
 const LETSPLAY_MAX_MS = 4500;    // Duree max d'attente du "Let's Play"
 const INTRO_MAX_MS = 3500;       // Duree max d'attente du jingle d'ouverture
-const SILENCE_BETWEEN_MS = 450;  // Petit silence entre deux sons
+const SILENCE_BETWEEN_MS = 10;  // Petit silence entre deux sons
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -44,6 +45,8 @@ const waitForSound = (soundPromise, minMs = 0, maxMs = 8000) =>
     sleep(maxMs),
   ]);
 
+const DEFAULT_ANSWER_STATES = ['default', 'default', 'default', 'default'];
+
 export const Game = () => {
   const navigate = useNavigate();
   
@@ -52,7 +55,7 @@ export const Game = () => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [gameState, setGameState] = useState(GAME_STATES.PLAYING);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [answerStates, setAnswerStates] = useState(['default', 'default', 'default', 'default']);
+  const [answerStates, setAnswerStates] = useState(DEFAULT_ANSWER_STATES);
   
   // Jokers
   const [usedJokers, setUsedJokers] = useState({ fifty: false, phone: false, audience: false });
@@ -69,8 +72,9 @@ export const Game = () => {
   const [timerPaused, setTimerPaused] = useState(false);
   const timerRef = useRef(null);
   
-  // Reveal mode : si vrai, un bouton "Reveler" apparait au lieu d'une reveal auto
-  const [manualReveal, setManualReveal] = useState(false);
+  // Reveal mode active from question 6 included.
+  const manualReveal = true;
+  const isManualRevealActive = manualReveal && currentLevel >= 6;
   // Promise resolver utilise pour reprendre le flux async quand le bouton est clique
   const revealResolverRef = useRef(null);
   
@@ -83,6 +87,20 @@ export const Game = () => {
   const [playerNames, setPlayerNames] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [scores, setScores] = useState([0, 0]);
+
+  const playIntroSequence = useCallback(async () => {
+    const introPromise = soundManager.playGameStart();
+    await waitForSound(introPromise, 0, INTRO_MAX_MS);
+    await sleep(SILENCE_BETWEEN_MS);
+    setGameState(GAME_STATES.PLAYING);
+    soundManager.playBed(1);
+  }, []);
+
+  const resetRoundState = useCallback(() => {
+    setSelectedAnswer(null);
+    setAnswerStates(DEFAULT_ANSWER_STATES);
+    setEliminatedAnswers([]);
+  }, []);
 
   // Load game data
   useEffect(() => {
@@ -112,12 +130,6 @@ export const Game = () => {
         setTimerDuration(duration);
         setTimeRemaining(duration);
       }
-    }
-    
-    // Mode de revelation (automatique par defaut)
-    const storedManualReveal = sessionStorage.getItem('manualReveal');
-    if (storedManualReveal) {
-      setManualReveal(JSON.parse(storedManualReveal));
     }
     
     // Initialisation : passage en INTRO avec jingle d'ouverture puis gameplay
@@ -215,7 +227,7 @@ export const Game = () => {
     await waitForSound(finalPromise, DRAMATIC_PAUSE_MS, DRAMATIC_PAUSE_MS + 1500);
     
     // Mode "animateur" : on attend que le joueur/presentateur clique sur "Reveler"
-    if (manualReveal) {
+    if (isManualRevealActive) {
       setGameState(GAME_STATES.AWAITING_REVEAL);
       await new Promise((resolve) => {
         revealResolverRef.current = resolve;
@@ -245,16 +257,14 @@ export const Game = () => {
       const nextLevel = currentLevel + 1;
       setCurrentLevel(nextLevel);
       setGameState(GAME_STATES.TRANSITION);
-      setSelectedAnswer(null);
-      setAnswerStates(['default', 'default', 'default', 'default']);
-      setEliminatedAnswers([]);
+      resetRoundState();
       if (gameMode === 'multi') {
         setCurrentPlayer(prev => (prev + 1) % 2);
       }
       
       // "Let's Play <montant>" : on attend sa fin avant de reveler la question
       const letsPlayPromise = soundManager.playLetsPlay(nextLevel);
-      await waitForSound(letsPlayPromise, 0, LETSPLAY_MAX_MS);
+      await waitForSound(letsPlayPromise, LETSPLAY_MIN_MS, LETSPLAY_MAX_MS);
       await sleep(SILENCE_BETWEEN_MS);
       
       setGameState(GAME_STATES.PLAYING);
@@ -277,10 +287,11 @@ export const Game = () => {
       }
       
       // On laisse le verdict s'installer avant l'ecran "Game Over"
-      await sleep(OUTCOME_MIN_MS + 500);
+      await sleep(OUTCOME_MIN_MS + 50);
       setGameState(GAME_STATES.LOST);
+      soundManager.playGoodbye();
     }
-  }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney, manualReveal]);
+  }, [gameState, selectedAnswer, currentQuestion, currentLevel, gameMode, currentPlayer, guaranteedMoney, isManualRevealActive, resetRoundState]);
 
   // Declenche la revelation en mode manuel (resout la promise attendue par le flux)
   const handleRevealAnswer = useCallback(() => {
@@ -295,7 +306,7 @@ export const Game = () => {
     setSelectedAnswer(null);
     setGameState(GAME_STATES.PLAYING);
     setTimerPaused(false); // Resume timer
-    setAnswerStates(prev => prev.map(() => 'default'));
+    setAnswerStates(DEFAULT_ANSWER_STATES);
   }, [gameState]);
 
   // Joker: 50:50
@@ -380,23 +391,15 @@ export const Game = () => {
   const handleRestart = () => {
     setCurrentLevel(1);
     setGameState(GAME_STATES.PLAYING);
-    setSelectedAnswer(null);
-    setAnswerStates(['default', 'default', 'default', 'default']);
+    resetRoundState();
     setUsedJokers({ fifty: false, phone: false, audience: false });
-    setEliminatedAnswers([]);
     setCurrentPlayer(0);
     setScores([0, 0]);
     setTimeRemaining(timerDuration);
     setTimerPaused(false);
     // Re-declenche la sequence d'intro au redemarrage
     setGameState(GAME_STATES.INTRO);
-    (async () => {
-      const introPromise = soundManager.playGameStart();
-      await waitForSound(introPromise, 0, INTRO_MAX_MS);
-      await sleep(SILENCE_BETWEEN_MS);
-      setGameState(GAME_STATES.PLAYING);
-      soundManager.playBed(1);
-    })();
+    playIntroSequence();
   };
 
   if (!currentQuestion) {
@@ -668,11 +671,8 @@ export const Game = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <p className="text-[#B0B0C0] text-sm text-center italic">
-                  L'animateur garde le suspense...
-                </p>
                 <motion.button
-                  className="btn-primary flex items-center justify-center gap-2 px-8"
+                  className="btn-primary flex items-center justify-center gap-2 px-8 py-3 text-base sm:text-lg font-bold shadow-[0_0_24px_rgba(255,215,0,0.35)] border border-[#FFD700]/50"
                   onClick={handleRevealAnswer}
                   animate={{ scale: [1, 1.04, 1] }}
                   transition={{ repeat: Infinity, duration: 1.6 }}
@@ -681,6 +681,9 @@ export const Game = () => {
                   <Eye size={20} />
                   Révéler la réponse
                 </motion.button>
+                <p className="text-[#FFD700] text-xs uppercase tracking-widest text-center">
+                  Prêt pour le verdict ?
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -692,9 +695,6 @@ export const Game = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <p className="text-[#FFD700] text-xl font-bold animate-pulse">
-                Vérification en cours...
-              </p>
             </motion.div>
           )}
         </div>
