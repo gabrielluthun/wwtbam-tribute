@@ -271,7 +271,7 @@ export const Game = () => {
       setTimerPaused(false);
       soundManager.playBed(nextLevel);
     } else {
-      soundManager.playWrong(currentLevel);
+      const losePromise = soundManager.playWrong(currentLevel);
       setAnswerStates(prev => prev.map((s, i) => {
         if (i === selectedAnswer) return 'wrong';
         if (i === currentQuestion.correctIndex) return 'correct';
@@ -286,8 +286,9 @@ export const Game = () => {
         });
       }
       
-      // On laisse le verdict s'installer avant l'ecran "Game Over"
-      await sleep(OUTCOME_MIN_MS + 50);
+      // En cas de defaite, on attend la fin complete du son "lose"
+      // (avec un minimum visuel pour laisser le verdict s'installer).
+      await Promise.all([Promise.resolve(losePromise), sleep(OUTCOME_MIN_MS)]);
       setGameState(GAME_STATES.LOST);
       soundManager.playGoodbye();
     }
@@ -365,6 +366,20 @@ export const Game = () => {
     setShowAudienceDialog(false);
     setTimerPaused(false);
   };
+
+  // Easter egg: cliquer un gain dans la pyramide affiche la question associee.
+  const handleSelectMoneyLevel = useCallback((level) => {
+    if (gameState !== GAME_STATES.PLAYING) return;
+    if (!Number.isInteger(level) || level < 1 || level > questions.length) return;
+    if (level === currentLevel) return;
+
+    setCurrentLevel(level);
+    setGameState(GAME_STATES.PLAYING);
+    setTimerPaused(false);
+    resetRoundState();
+    soundManager.playBed(level);
+    setShowMoneyTree(false);
+  }, [gameState, questions.length, currentLevel, resetRoundState]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -704,6 +719,7 @@ export const Game = () => {
           currentLevel={currentLevel}
           isOpen={showMoneyTree}
           onClose={() => setShowMoneyTree(false)}
+          onSelectLevel={handleSelectMoneyLevel}
         />
       </div>
 
