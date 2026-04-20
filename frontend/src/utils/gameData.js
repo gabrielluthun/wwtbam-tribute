@@ -1,26 +1,26 @@
 // Money tree levels (15 levels like the real show)
 export const MONEY_LEVELS = [
-  { level: 1, amount: 100, display: '100 €', checkpoint: false },
-  { level: 2, amount: 200, display: '200 €', checkpoint: false },
-  { level: 3, amount: 300, display: '300 €', checkpoint: false },
-  { level: 4, amount: 500, display: '500 €', checkpoint: false },
-  { level: 5, amount: 1000, display: '1 000 €', checkpoint: true }, // First checkpoint
-  { level: 6, amount: 2000, display: '2 000 €', checkpoint: false },
-  { level: 7, amount: 4000, display: '4 000 €', checkpoint: false },
-  { level: 8, amount: 8000, display: '8 000 €', checkpoint: false },
-  { level: 9, amount: 12000, display: '12 000 €', checkpoint: false },
-  { level: 10, amount: 24000, display: '24 000 €', checkpoint: true }, // Second checkpoint
-  { level: 11, amount: 48000, display: '48 000 €', checkpoint: false },
-  { level: 12, amount: 72000, display: '72 000 €', checkpoint: false },
-  { level: 13, amount: 100000, display: '100 000 €', checkpoint: false },
+  { level: 1, amount: 200, display: '200 €', checkpoint: false },
+  { level: 2, amount: 300, display: '300 €', checkpoint: false },
+  { level: 3, amount: 500, display: '500 €', checkpoint: false },
+  { level: 4, amount: 800, display: '800 €', checkpoint: false },
+  { level: 5, amount: 1500, display: '1 500 €', checkpoint: true }, // First checkpoint
+  { level: 6, amount: 3000, display: '3 000 €', checkpoint: false },
+  { level: 7, amount: 6000, display: '6 000 €', checkpoint: false },
+  { level: 8, amount: 12000, display: '12 000 €', checkpoint: false },
+  { level: 9, amount: 24000, display: '24 000 €', checkpoint: false },
+  { level: 10, amount: 48000, display: '48 000 €', checkpoint: true }, // Second checkpoint
+  { level: 11, amount: 72000, display: '72 000 €', checkpoint: false },
+  { level: 12, amount: 100000, display: '100 000 €', checkpoint: false },
+  { level: 13, amount: 150000, display: '150 000 €', checkpoint: false },
   { level: 14, amount: 300000, display: '300 000 €', checkpoint: false },
   { level: 15, amount: 1000000, display: '1 000 000 €', checkpoint: true }, // MILLION!
 ];
 
 // Get guaranteed amount based on checkpoints
 export const getGuaranteedAmount = (currentLevel) => {
-  if (currentLevel >= 10) return MONEY_LEVELS[9]; // 24 000 €
-  if (currentLevel >= 5) return MONEY_LEVELS[4]; // 1 000 €
+  if (currentLevel >= 10) return MONEY_LEVELS[9]; // 48 000 €
+  if (currentLevel >= 5) return MONEY_LEVELS[4]; // 1 500 €
   return { level: 0, amount: 0, display: '0 €' };
 };
 
@@ -32,6 +32,15 @@ export const PHONE_RESPONSES = [
   "D'après mes souvenirs, c'est {answer}. J'en suis assez confiant.",
   "Je crois que c'est {answer}, mais vérifie quand même !",
   "Mon instinct me dit {answer}. Bonne chance !",
+  "Sans hésiter, je répondrais {answer}.",
+  "Ça me parle beaucoup, je dirais {answer}.",
+  "Je ne veux pas t'induire en erreur, mais je pense à {answer}.",
+  "Si je dois choisir vite, je pars sur {answer}.",
+  "Franchement, {answer} me semble la meilleure option.",
+  "Je mettrais une pièce sur {answer}.",
+  "J'ai un doute, mais {answer} reste mon premier choix.",
+  "Pour moi, c'est {answer}, sauf énorme piège.",
+  "J'irais sur {answer}. Fais-toi confiance aussi.",
 ];
 
 // Get random phone response
