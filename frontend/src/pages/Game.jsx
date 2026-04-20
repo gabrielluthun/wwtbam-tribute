@@ -35,6 +35,7 @@ const LETSPLAY_MIN_MS = 1500;    // Duree minimale d'affichage de "Pour x€"
 const LETSPLAY_MAX_MS = 4500;    // Duree max d'attente du "Let's Play"
 const INTRO_MAX_MS = 3500;       // Duree max d'attente du jingle d'ouverture
 const SILENCE_BETWEEN_MS = 10;  // Petit silence entre deux sons
+const TRANSITION_OVERLAY_LEAD_MS = 300 ; // Laisse l'overlay apparaitre avant la nouvelle question
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -81,6 +82,7 @@ export const Game = () => {
   // UI state
   const [isMuted, setIsMuted] = useState(false);
   const [showMoneyTree, setShowMoneyTree] = useState(false);
+  const [transitionLevel, setTransitionLevel] = useState(null);
   
   // Multiplayer
   const [gameMode, setGameMode] = useState('solo');
@@ -202,6 +204,8 @@ export const Game = () => {
   const currentQuestion = questions[currentLevel - 1];
   const currentMoney = MONEY_LEVELS[currentLevel - 1];
   const guaranteedMoney = getGuaranteedAmount(currentLevel);
+  const overlayLevel = transitionLevel ?? currentLevel;
+  const overlayMoney = MONEY_LEVELS[overlayLevel - 1] ?? MONEY_LEVELS[0];
 
   // Handle answer selection
   const handleSelectAnswer = useCallback((index) => {
@@ -255,8 +259,10 @@ export const Game = () => {
       
       // Passage en TRANSITION : on annonce le nouveau palier avant d'afficher la question
       const nextLevel = currentLevel + 1;
-      setCurrentLevel(nextLevel);
+      setTransitionLevel(nextLevel);
       setGameState(GAME_STATES.TRANSITION);
+      await sleep(TRANSITION_OVERLAY_LEAD_MS);
+      setCurrentLevel(nextLevel);
       resetRoundState();
       if (gameMode === 'multi') {
         setCurrentPlayer(prev => (prev + 1) % 2);
@@ -268,6 +274,7 @@ export const Game = () => {
       await sleep(SILENCE_BETWEEN_MS);
       
       setGameState(GAME_STATES.PLAYING);
+      setTransitionLevel(null);
       setTimerPaused(false);
       soundManager.playBed(nextLevel);
     } else {
@@ -405,6 +412,7 @@ export const Game = () => {
   // Restart game
   const handleRestart = () => {
     setCurrentLevel(1);
+    setTransitionLevel(null);
     setGameState(GAME_STATES.PLAYING);
     resetRoundState();
     setUsedJokers({ fifty: false, phone: false, audience: false });
@@ -749,20 +757,20 @@ export const Game = () => {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <p className="text-[#00E5FF] text-sm sm:text-base uppercase tracking-[0.3em] mb-4">
-                {gameState === GAME_STATES.INTRO ? 'Prêt ?' : `Question ${currentLevel}`}
+                {gameState === GAME_STATES.INTRO ? 'Prêt ?' : `Question ${overlayLevel}`}
               </p>
               <motion.h1
                 className={`text-5xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] ${
-                  currentMoney.checkpoint ? 'text-[#00E5FF] text-glow-cyan' : 'text-[#FFD700] text-glow-gold'
+                  overlayMoney.checkpoint ? 'text-[#00E5FF] text-glow-cyan' : 'text-[#FFD700] text-glow-gold'
                 }`}
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8 }}
               >
                 {gameState === GAME_STATES.INTRO
                   ? `${MONEY_LEVELS[0].display}`
-                  : `Pour ${currentMoney.display}`}
+                  : `Pour ${overlayMoney.display}`}
               </motion.h1>
-              {currentMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
+              {overlayMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
                 <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">
                   Palier garanti
                 </p>
