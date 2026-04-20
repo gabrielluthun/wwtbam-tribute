@@ -62,6 +62,12 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
     }
   };
 
+  const handleEditQuestions = () => {
+    if (!editingTheme || !onSelectTheme) return;
+    onSelectTheme(editingTheme.id);
+    closeEditTheme();
+  };
+
   const handleDeleteTheme = (theme) => {
     if (!onDeleteTheme) return;
     setThemeToDelete(theme);
@@ -137,19 +143,19 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
                   whileTap={{ scale: 0.98 }}
                   data-testid={`theme-${theme.id}`}
                 >
-                  {theme.isCustom && (
-                    <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-                      <button
-                        className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditTheme(theme);
-                        }}
-                        title="Renommer le thème"
-                        data-testid={`edit-theme-${theme.id}`}
-                      >
-                        <Pencil size={14} className="text-white" />
-                      </button>
+                  <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+                    <button
+                      className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditTheme(theme);
+                      }}
+                      title="Modifier le thème"
+                      data-testid={`edit-theme-${theme.id}`}
+                    >
+                      <Pencil size={14} className="text-white" />
+                    </button>
+                    {theme.isCustom && (
                       <button
                         className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors"
                         onClick={(e) => {
@@ -161,8 +167,8 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
                       >
                         <Trash2 size={14} className="text-white" />
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Icon */}
                   <div 
@@ -198,7 +204,9 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
 
           {editingTheme && (
             <div className="mt-6 p-4 rounded-lg bg-[#8B5CF6]/10 border border-[#8B5CF6]/30">
-              <h3 className="text-white font-semibold mb-3">Modifier un thème personnalisé</h3>
+              <h3 className="text-white font-semibold mb-3">
+                {editingTheme.isCustom ? 'Modifier un thème personnalisé' : 'Détails du thème'}
+              </h3>
               <div className="space-y-3">
                 <input
                   value={editName}
@@ -206,15 +214,17 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
                     setEditName(e.target.value);
                     setEditError('');
                   }}
-                  className="game-input w-full"
+                  className="game-input w-full disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="Nom du thème"
+                  disabled={!editingTheme.isCustom}
                   data-testid="rename-theme-name"
                 />
                 <input
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="game-input w-full"
+                  className="game-input w-full disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="Description (optionnel)"
+                  disabled={!editingTheme.isCustom}
                   data-testid="rename-theme-description"
                 />
                 <div className="flex items-center gap-3">
@@ -222,36 +232,38 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
                     type="color"
                     value={editColor}
                     onChange={(e) => setEditColor(e.target.value)}
-                    className="h-10 w-16 rounded border border-white/20 bg-transparent cursor-pointer"
+                    className="h-10 w-16 rounded border border-white/20 bg-transparent cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={!editingTheme.isCustom}
                     data-testid="rename-theme-color"
                   />
                   <span className="text-[#D8D8E8] text-sm font-mono uppercase">{editColor}</span>
                 </div>
+                {!editingTheme.isCustom && (
+                  <p className="text-[#B0B0C0] text-xs">
+                    Ce thème prédéfini ne peut pas être renommé, mais vous pouvez modifier ses questions.
+                  </p>
+                )}
               </div>
               {editError && (
                 <p className="text-red-400 text-sm mt-3" data-testid="rename-theme-error">
                   {editError}
                 </p>
               )}
-              <div className="mt-4 flex items-center justify-end gap-3">
+              <div className="mt-4 flex items-center justify-end gap-3 flex-wrap">
+                <button className="btn-primary text-sm" onClick={handleEditQuestions} data-testid="edit-theme-questions">
+                  Modifier les questions
+                </button>
                 <button className="btn-secondary text-sm" onClick={closeEditTheme}>
                   Annuler
                 </button>
-                <button className="btn-primary text-sm" onClick={handleRenameTheme} data-testid="rename-theme-confirm">
-                  Enregistrer
-                </button>
+                {editingTheme.isCustom && (
+                  <button className="btn-primary text-sm" onClick={handleRenameTheme} data-testid="rename-theme-confirm">
+                    Enregistrer
+                  </button>
+                )}
               </div>
             </div>
           )}
-
-          {/* Footer note */}
-          <div className="mt-6 p-4 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30">
-            <p className="text-[#D8D8E8] text-sm">
-              <span className="text-[#00E5FF] font-semibold">💡 Astuce :</span> Après avoir chargé un thème, 
-              vous pouvez modifier toutes les questions et leurs réponses. Utilisez l'option "Mélanger l'ordre" 
-              pour jouer les questions dans un ordre aléatoire !
-            </p>
-          </div>
         </motion.div>
 
         <AnimatePresence>
