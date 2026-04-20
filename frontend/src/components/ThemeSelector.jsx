@@ -143,7 +143,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
               const Icon = ICON_MAP[theme.icon] || Brain;
               
               return (
-                <motion.button
+                <motion.div
                   key={theme.id}
                   className="theme-card relative overflow-hidden rounded-xl p-5 text-left transition-all border-2"
                   style={{
@@ -151,7 +151,15 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                     backgroundColor: 'rgba(11, 11, 26, 0.85)',
                     background: `linear-gradient(135deg, ${theme.color}15 0%, rgba(11, 11, 26, 0.8) 100%)`,
                   }}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleCardClick(theme)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleCardClick(theme);
+                    }
+                  }}
                   initial={{ opacity: 1, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
@@ -217,7 +225,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                     <Check size={14} style={{ color: theme.color }} />
                     <span>{theme.isCustom ? 'Thème personnalisé' : '15 questions prêtes'}</span>
                   </div>
-                </motion.button>
+                </motion.div>
               );
             })}
           </div>
