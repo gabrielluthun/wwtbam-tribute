@@ -10,6 +10,8 @@ const q = (question, answers, correctLetter) => ({
   correctIndex: ANSWER_LETTERS.indexOf(correctLetter),
 });
 
+const CUSTOM_THEMES_STORAGE_KEY = 'qvgdm_custom_themes_v1';
+
 export const THEMES = {
   culture_g: {
     id: 'culture_g',
@@ -187,12 +189,157 @@ export const THEMES = {
   },
 };
 
+const canUseLocalStorage = () =>
+  typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+const normalizeQuestion = (question, idx) => {
+  const safeAnswers = Array.isArray(question?.answers) ? question.answers.slice(0, 4) : [];
+
+  while (safeAnswers.length < 4) {
+    safeAnswers.push('');
+  }
+
+  const correctIndex = Number.isInteger(question?.correctIndex) &&
+    question.correctIndex >= 0 &&
+    question.correctIndex <= 3
+    ? question.correctIndex
+    : 0;
+
+  return {
+    id: question?.id || `q-${idx + 1}`,
+    question: typeof question?.question === 'string' ? question.question : '',
+    answers: safeAnswers.map((answer) => (typeof answer === 'string' ? answer : '')),
+    correctIndex,
+  };
+};
+
+const normalizeCustomTheme = (theme) => {
+  if (!theme || typeof theme !== 'object') return null;
+  if (!Array.isArray(theme.questions) || theme.questions.length !== 15) return null;
+
+  const name = typeof theme.name === 'string' ? theme.name.trim() : '';
+  if (!name) return null;
+
+  return {
+    id: typeof theme.id === 'string' && theme.id ? theme.id : `custom-${Date.now()}`,
+    name,
+    icon: 'Palette',
+    color: typeof theme.color === 'string' && theme.color ? theme.color : '#8B5CF6',
+    description: typeof theme.description === 'string' && theme.description.trim()
+      ? theme.description.trim()
+      : 'Thème créé par un joueur',
+    questions: theme.questions.map(normalizeQuestion),
+    isCustom: true,
+    createdAt: theme.createdAt || new Date().toISOString(),
+  };
+};
+
+const readCustomThemes = () => {
+  if (!canUseLocalStorage()) return [];
+
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map(normalizeCustomTheme)
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+
+const writeCustomThemes = (themes) => {
+  if (!canUseLocalStorage()) return;
+  window.localStorage.setItem(CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
+};
+
+export const saveCustomTheme = ({ name, description, color, questions }) => {
+  const safeName = typeof name === 'string' ? name.trim() : '';
+  if (!safeName) {
+    throw new Error('Le nom du thème est requis');
+  }
+
+  if (!Array.isArray(questions) || questions.length !== 15) {
+    throw new Error('Un thème doit contenir exactement 15 questions');
+  }
+
+  const nextTheme = normalizeCustomTheme({
+    id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: safeName,
+    description,
+    color,
+    questions,
+    createdAt: new Date().toISOString(),
+  });
+
+  if (!nextTheme) {
+    throw new Error('Impossible de sauvegarder ce thème');
+  }
+
+  const existingThemes = readCustomThemes();
+  const updatedThemes = [...existingThemes, nextTheme];
+  writeCustomThemes(updatedThemes);
+
+  return nextTheme;
+};
+
+export const renameCustomTheme = ({ themeId, name, description, color }) => {
+  const safeName = typeof name === 'string' ? name.trim() : '';
+  if (!safeName) {
+    throw new Error('Le nom du thème est requis');
+  }
+
+  const existingThemes = readCustomThemes();
+  const themeIndex = existingThemes.findIndex((theme) => theme.id === themeId);
+  if (themeIndex < 0) {
+    throw new Error('Thème personnalisé introuvable');
+  }
+
+  const currentTheme = existingThemes[themeIndex];
+  const updatedTheme = normalizeCustomTheme({
+    ...currentTheme,
+    name: safeName,
+    description: typeof description === 'string' ? description : currentTheme.description,
+    color: typeof color === 'string' ? color : currentTheme.color,
+  });
+
+  if (!updatedTheme) {
+    throw new Error('Impossible de renommer ce thème');
+  }
+
+  const updatedThemes = [...existingThemes];
+  updatedThemes[themeIndex] = updatedTheme;
+  writeCustomThemes(updatedThemes);
+
+  return updatedTheme;
+};
+
+export const deleteCustomTheme = (themeId) => {
+  const existingThemes = readCustomThemes();
+  const filteredThemes = existingThemes.filter((theme) => theme.id !== themeId);
+
+  if (filteredThemes.length === existingThemes.length) {
+    throw new Error('Thème personnalisé introuvable');
+  }
+
+  writeCustomThemes(filteredThemes);
+};
+
 // Get all themes as array for UI
-export const getThemesList = () => Object.values(THEMES);
+export const getThemesList = () => [...Object.values(THEMES), ...readCustomThemes()];
+
+export const getThemeById = (themeId) => {
+  if (THEMES[themeId]) return THEMES[themeId];
+  return readCustomThemes().find((theme) => theme.id === themeId) || null;
+};
 
 // Get a specific theme's questions formatted for the game
 export const getThemeQuestions = (themeId) => {
-  const theme = THEMES[themeId];
+  const theme = getThemeById(themeId);
   if (!theme) return null;
   
   return theme.questions.map((q, idx) => ({
