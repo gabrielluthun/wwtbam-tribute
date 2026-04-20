@@ -28,8 +28,8 @@ export const SetupQuestions = () => {
   // Shuffle questions option
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   
-  // Reveal mode : si activee, l'animateur attend un clic avant de reveler la reponse
-  const [manualReveal, setManualReveal] = useState(false);
+  // Reveal mode: always manual after final answer.
+  const manualReveal = true;
   
   // Theme selector
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -475,26 +475,14 @@ export const SetupQuestions = () => {
                   </p>
                 </div>
 
-                {/* Manual reveal (suspense) */}
+                {/* Manual reveal (always enabled) */}
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                     <Eye size={18} className="text-[#FFD700]" />
                     Révélation manuelle
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={manualReveal}
-                      onCheckedChange={setManualReveal}
-                      data-testid="manual-reveal-toggle"
-                    />
-                    <span className="text-[#B0B0C0] text-sm">
-                      {manualReveal ? 'Mode animateur (suspense)' : 'Validation automatique'}
-                    </span>
-                  </div>
                   <p className="text-[#B0B0C0] text-xs mt-2">
-                    {manualReveal
-                      ? 'Après "C\'est mon dernier mot !", un bouton "Révéler la réponse" apparaît : gardez le suspense aussi longtemps que vous le souhaitez.'
-                      : 'La bonne ou mauvaise réponse est révélée automatiquement après validation.'}
+                    À partir de la question 6, après "C'est mon dernier mot !", un bouton "L'animateur révèle la réponse" apparaît. Les 5 premières questions restent en validation immédiate.
                   </p>
                 </div>
               </div>
