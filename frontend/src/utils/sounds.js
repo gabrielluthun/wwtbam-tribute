@@ -128,6 +128,7 @@ const SFX = {
 class SoundManager {
   constructor() {
     this.bed = null;           // Audio en cours pour le fond de question (loop)
+    this.bedSrc = null;        // Source du bed en cours (pour eviter les redemarrages inutiles)
     this.oneshots = new Set(); // Stingers en cours (pour pouvoir tout couper)
     this.isMuted = false;
     this.volume = 0.7;         // Volume general
@@ -173,16 +174,19 @@ class SoundManager {
 
   // --- Musique de fond (bed) ------------------------------------------------
   playBed(level) {
-    this.stopBed();
     if (this.isMuted) return;
     const conf = LEVEL_SOUNDS[level];
     if (!conf?.bed) return;
+    // Si le meme bed joue deja (palier 1), on le laisse tourner en continu.
+    if (this.bed && this.bedSrc === conf.bed && !this.bed.paused) return;
+    this.stopBed();
     try {
       const audio = new Audio(conf.bed);
       audio.loop = true;
       audio.volume = this.volume * this.bedVolume;
       audio.play().catch(() => {});
       this.bed = audio;
+      this.bedSrc = conf.bed;
     } catch (_) { /* ignore */ }
   }
 
@@ -193,23 +197,29 @@ class SoundManager {
         this.bed.currentTime = 0;
       } catch (_) { /* ignore */ }
       this.bed = null;
+      this.bedSrc = null;
     }
   }
 
   // --- Sons par niveau ------------------------------------------------------
   playLetsPlay(level) {
+    // A partir du niveau 6, on coupe le bed avant l'annonce "Let's play".
+    // Sur le premier palier (1-5), on garde le bed en continu, y compris sur "Pour x€".
+    if (level >= 6) this.stopBed();
     const conf = LEVEL_SOUNDS[level];
     return this._playOnce(conf?.letsPlay);
   }
 
   playFinalAnswer(level) {
-    this.stopBed();
+    // Palier 1 (Q1-Q5) : bed non-stop, donc pas de coupe ici.
+    if (level >= 6) this.stopBed();
     const conf = LEVEL_SOUNDS[level];
     return this._playOnce(conf?.final, { stopOthers: true });
   }
 
   playCorrect(level) {
-    this.stopBed();
+    // Palier 1 (Q1-Q5) : superposition bed + jingle de bonne reponse.
+    if (level >= 6) this.stopBed();
     const conf = LEVEL_SOUNDS[level];
     return this._playOnce(conf?.win, { stopOthers: true });
   }
