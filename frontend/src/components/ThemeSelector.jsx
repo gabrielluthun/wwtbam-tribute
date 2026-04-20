@@ -17,6 +17,7 @@ const ICON_MAP = {
 
 export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, onDeleteTheme }) => {
   const [editingThemeId, setEditingThemeId] = useState(null);
+  const [themeToDelete, setThemeToDelete] = useState(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editColor, setEditColor] = useState('#8B5CF6');
@@ -40,6 +41,10 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
     setEditError('');
   };
 
+  const closeDeleteModal = () => {
+    setThemeToDelete(null);
+  };
+
   const handleRenameTheme = () => {
     if (!editingTheme || !onRenameTheme) return;
     try {
@@ -57,12 +62,16 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
 
   const handleDeleteTheme = (theme) => {
     if (!onDeleteTheme) return;
-    const confirmed = window.confirm(`Supprimer le thème "${theme.name}" ?`);
-    if (!confirmed) return;
-    onDeleteTheme(theme.id);
-    if (editingThemeId === theme.id) {
+    setThemeToDelete(theme);
+  };
+
+  const confirmDeleteTheme = () => {
+    if (!themeToDelete || !onDeleteTheme) return;
+    onDeleteTheme(themeToDelete.id);
+    if (editingThemeId === themeToDelete.id) {
       closeEditTheme();
     }
+    closeDeleteModal();
   };
 
   return (
@@ -242,6 +251,59 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
             </p>
           </div>
         </motion.div>
+
+        <AnimatePresence>
+          {themeToDelete && (
+            <motion.div
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeDeleteModal}
+              data-testid="delete-theme-modal"
+            >
+              <motion.div
+                className="relative w-full max-w-md rounded-2xl border border-red-400/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_45px_rgba(255,80,120,0.2)]"
+                initial={{ scale: 0.92, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 12 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-red-400/30 via-pink-400/20 to-purple-400/30 blur-md -z-10" />
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full border border-red-400/50 bg-red-500/15">
+                    <Trash2 size={18} className="text-red-300" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold font-['Chivo'] text-white">Confirmer la suppression</h3>
+                    <p className="mt-2 text-sm text-[#D8D8E8]">
+                      Supprimer le thème <span className="font-semibold text-white">"{themeToDelete.name}"</span> ?
+                      Cette action est irréversible.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    className="btn-secondary text-sm"
+                    onClick={closeDeleteModal}
+                    data-testid="delete-theme-cancel"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 hover:shadow-[0_0_24px_rgba(255,80,120,0.45)]"
+                    onClick={confirmDeleteTheme}
+                    data-testid="delete-theme-confirm"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
