@@ -17,9 +17,10 @@ const ICON_MAP = {
   Heart,
 };
 
-export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, onDeleteTheme }) => {
+export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onRenameTheme, onDeleteTheme }) => {
   const [editingThemeId, setEditingThemeId] = useState(null);
   const [themeToDelete, setThemeToDelete] = useState(null);
+  const [themeToPlay, setThemeToPlay] = useState(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editColor, setEditColor] = useState('#8B5CF6');
@@ -45,6 +46,24 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
 
   const closeDeleteModal = () => {
     setThemeToDelete(null);
+  };
+
+  const closePlayModal = () => {
+    setThemeToPlay(null);
+  };
+
+  const handleCardClick = (theme) => {
+    setThemeToPlay(theme);
+  };
+
+  const confirmPlayTheme = () => {
+    if (!themeToPlay) return;
+    if (onPlayTheme) {
+      onPlayTheme(themeToPlay.id);
+    } else if (onSelectTheme) {
+      onSelectTheme(themeToPlay.id);
+    }
+    closePlayModal();
   };
 
   const handleRenameTheme = () => {
@@ -131,7 +150,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
                     borderColor: `${theme.color}40`,
                     background: `linear-gradient(135deg, ${theme.color}15 0%, rgba(11, 11, 26, 0.8) 100%)`,
                   }}
-                  onClick={() => onSelectTheme(theme.id)}
+                  onClick={() => handleCardClick(theme)}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
@@ -267,6 +286,50 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onRenameTheme, o
         </motion.div>
 
         <AnimatePresence>
+          {themeToPlay && (
+            <motion.div
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closePlayModal}
+              data-testid="play-theme-modal"
+            >
+              <motion.div
+                className="relative w-full max-w-md rounded-2xl border border-[#FFD700]/40 bg-gradient-to-br from-[#1C1025] via-[#120B1E] to-[#0B0B1A] p-6 shadow-[0_0_45px_rgba(255,215,0,0.2)]"
+                initial={{ scale: 0.92, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 12 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#FFD700]/30 via-[#00E5FF]/20 to-[#8B5CF6]/30 blur-md -z-10" />
+
+                <h3 className="text-xl font-bold font-['Chivo'] text-white">Jouer ce thème ?</h3>
+                <p className="mt-2 text-sm text-[#D8D8E8]">
+                  Voulez-vous commencer immédiatement avec le thème{' '}
+                  <span className="font-semibold text-white">"{themeToPlay.name}"</span> ?
+                </p>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    className="btn-secondary text-sm"
+                    onClick={closePlayModal}
+                    data-testid="play-theme-cancel"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    className="btn-primary text-sm"
+                    onClick={confirmPlayTheme}
+                    data-testid="play-theme-confirm"
+                  >
+                    Commencer
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
           {themeToDelete && (
             <motion.div
               className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
