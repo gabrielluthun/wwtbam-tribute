@@ -1,12 +1,12 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library } from 'lucide-react';
+import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library, Save, Palette } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Switch } from '../components/ui/switch';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { MONEY_LEVELS, createEmptyQuestion, ANSWER_LETTERS } from '../utils/gameData';
-import { getThemeQuestions, shuffleQuestions, THEMES } from '../utils/themes';
+import { deleteCustomTheme, getThemeQuestions, getThemeById, renameCustomTheme, shuffleQuestions, saveCustomTheme } from '../utils/themes';
 
 export const SetupQuestions = () => {
   const navigate = useNavigate();
@@ -36,6 +36,13 @@ export const SetupQuestions = () => {
   const [showImportExport, setShowImportExport] = useState(false);
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
+  
+  // Custom theme creation
+  const [showSaveThemeModal, setShowSaveThemeModal] = useState(false);
+  const [themeName, setThemeName] = useState('');
+  const [themeDescription, setThemeDescription] = useState('');
+  const [themeColor, setThemeColor] = useState('#8B5CF6');
+  const [saveThemeError, setSaveThemeError] = useState('');
 
   const currentQuestion = questions[currentEditIndex];
   const currentLevel = MONEY_LEVELS[currentEditIndex];
@@ -91,6 +98,9 @@ export const SetupQuestions = () => {
     const allAnswersFilled = q.answers.every(a => a.trim());
     return allAnswersFilled ? 'complete' : 'partial';
   };
+
+  const areAllQuestionsComplete = () =>
+    questions.every((_, index) => getQuestionStatus(index) === 'complete');
 
   // Export questions to JSON
   const handleExport = () => {
@@ -203,15 +213,69 @@ export const SetupQuestions = () => {
   // Load a theme
   const handleSelectTheme = (themeId) => {
     const themeQuestions = getThemeQuestions(themeId);
+    const selectedTheme = getThemeById(themeId);
     if (themeQuestions) {
       setQuestions(themeQuestions);
-      setLoadedTheme(THEMES[themeId]);
+      setLoadedTheme(selectedTheme);
       setErrors({});
       setCurrentEditIndex(0);
       setShowThemeSelector(false);
-      setImportSuccess(`Thème "${THEMES[themeId].name}" chargé avec succès !`);
+      setImportSuccess(`Thème "${selectedTheme?.name || 'inconnu'}" chargé avec succès !`);
       setTimeout(() => setImportSuccess(''), 3000);
     }
+  };
+
+  const openSaveThemeModal = () => {
+    setThemeName(loadedTheme?.isCustom ? loadedTheme.name : '');
+    setThemeDescription(loadedTheme?.isCustom ? loadedTheme.description : '');
+    setThemeColor(loadedTheme?.isCustom ? loadedTheme.color : '#8B5CF6');
+    setSaveThemeError('');
+    setShowSaveThemeModal(true);
+  };
+
+  const handleSaveCurrentTheme = () => {
+    if (!areAllQuestionsComplete()) {
+      setSaveThemeError('Complétez les 15 questions avant de sauvegarder un thème.');
+      return;
+    }
+
+    try {
+      const savedTheme = saveCustomTheme({
+        name: themeName,
+        description: themeDescription,
+        color: themeColor,
+        questions,
+      });
+
+      setLoadedTheme(savedTheme);
+      setShowSaveThemeModal(false);
+      setSaveThemeError('');
+      setImportSuccess(`Thème "${savedTheme.name}" sauvegardé ! Il est maintenant disponible dans la liste.`);
+      setTimeout(() => setImportSuccess(''), 3500);
+    } catch (error) {
+      setSaveThemeError(error.message || 'Impossible de sauvegarder ce thème.');
+    }
+  };
+
+  const handleRenameTheme = ({ themeId, name, description, color }) => {
+    const updatedTheme = renameCustomTheme({ themeId, name, description, color });
+    if (loadedTheme?.id === themeId) {
+      setLoadedTheme(updatedTheme);
+    }
+    setImportSuccess(`Thème "${updatedTheme.name}" modifié avec succès.`);
+    setTimeout(() => setImportSuccess(''), 3000);
+  };
+
+  const handleDeleteTheme = (themeId) => {
+    const deletedTheme = getThemeById(themeId);
+    deleteCustomTheme(themeId);
+
+    if (loadedTheme?.id === themeId) {
+      setLoadedTheme(null);
+    }
+
+    setImportSuccess(`Thème "${deletedTheme?.name || 'personnalisé'}" supprimé.`);
+    setTimeout(() => setImportSuccess(''), 3000);
   };
 
   const completedCount = questions.filter((_, i) => getQuestionStatus(i) === 'complete').length;
@@ -270,6 +334,14 @@ export const SetupQuestions = () => {
             >
               <Library size={16} />
               Thèmes
+            </button>
+            <button
+              className="btn-secondary flex items-center gap-2 text-sm"
+              onClick={openSaveThemeModal}
+              data-testid="save-theme-btn"
+            >
+              <Save size={16} />
+              Sauvegarder thème
             </button>
             <button
               className="btn-secondary flex items-center gap-2 text-sm"
@@ -580,7 +652,101 @@ export const SetupQuestions = () => {
         isOpen={showThemeSelector}
         onClose={() => setShowThemeSelector(false)}
         onSelectTheme={handleSelectTheme}
+        onRenameTheme={handleRenameTheme}
+        onDeleteTheme={handleDeleteTheme}
       />
+
+      {/* Save Theme Modal */}
+      <AnimatePresence>
+        {showSaveThemeModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSaveThemeModal(false)}
+            data-testid="save-theme-modal"
+          >
+            <motion.div
+              className="glass rounded-2xl w-full max-w-lg p-6"
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-white text-2xl font-bold font-['Chivo'] flex items-center gap-2">
+                <Palette size={22} className="text-[#8B5CF6]" />
+                Créer un thème libre
+              </h3>
+              <p className="text-[#B0B0C0] text-sm mt-2 mb-5">
+                Sauvegarde vos 15 questions actuelles comme thème réutilisable.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[#B0B0C0] text-sm mb-2">Nom du thème</label>
+                  <Input
+                    value={themeName}
+                    onChange={(e) => {
+                      setThemeName(e.target.value);
+                      setSaveThemeError('');
+                    }}
+                    className="game-input"
+                    placeholder="Ex: Histoire de France"
+                    data-testid="custom-theme-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#B0B0C0] text-sm mb-2">Description (optionnel)</label>
+                  <Input
+                    value={themeDescription}
+                    onChange={(e) => setThemeDescription(e.target.value)}
+                    className="game-input"
+                    placeholder="Ex: Questions du collège au niveau expert"
+                    data-testid="custom-theme-description"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#B0B0C0] text-sm mb-2">Couleur du thème</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={themeColor}
+                      onChange={(e) => setThemeColor(e.target.value)}
+                      className="h-10 w-16 rounded border border-white/20 bg-transparent cursor-pointer"
+                      data-testid="custom-theme-color"
+                    />
+                    <span className="text-[#D8D8E8] text-sm font-mono uppercase">{themeColor}</span>
+                  </div>
+                </div>
+              </div>
+
+              {saveThemeError && (
+                <p className="text-red-400 text-sm mt-4" data-testid="save-theme-error">
+                  {saveThemeError}
+                </p>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowSaveThemeModal(false)}
+                >
+                  Annuler
+                </button>
+                <button
+                  className="btn-primary flex items-center gap-2"
+                  onClick={handleSaveCurrentTheme}
+                  data-testid="confirm-save-theme-btn"
+                >
+                  <Save size={16} />
+                  Sauvegarder
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
