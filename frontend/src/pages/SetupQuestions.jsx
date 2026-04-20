@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library, Eye } from 'lucide-react';
+import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library, Eye, Save, Palette } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Switch } from '../components/ui/switch';
 import { ThemeSelector } from '../components/ThemeSelector';
