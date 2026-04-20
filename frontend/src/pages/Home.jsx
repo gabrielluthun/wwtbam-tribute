@@ -1,9 +1,20 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Play, Users, Info } from 'lucide-react';
+import { soundManager } from '../utils/sounds';
 
 export const Home = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    soundManager.init();
+    soundManager.playIntro();
+
+    return () => {
+      soundManager.stopBackground();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen studio-bg flex flex-col items-center justify-center p-6">
