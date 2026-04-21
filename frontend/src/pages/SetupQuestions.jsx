@@ -1,314 +1,90 @@
-import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play, ArrowLeft, Check, AlertCircle, Upload, Download, Clock, Settings, Shuffle, Library, Eye, Save, Palette } from 'lucide-react';
+import {
+  Play,
+  ArrowLeft,
+  Check,
+  AlertCircle,
+  Upload,
+  Download,
+  Clock,
+  Settings,
+  Shuffle,
+  Library,
+  Eye,
+  Save,
+  Palette,
+} from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Switch } from '../components/ui/switch';
 import { ThemeSelector } from '../components/ThemeSelector';
-import { MONEY_LEVELS, createEmptyQuestion, ANSWER_LETTERS } from '../utils/gameData';
-import { deleteCustomTheme, getThemeQuestions, getThemeById, renameCustomTheme, shuffleQuestions, saveCustomTheme } from '../utils/themes';
+import { MONEY_LEVELS, ANSWER_LETTERS } from '../utils/gameData';
+import { useSetupQuestions } from '../hooks/useSetupQuestions';
+import { SETUP_QUESTION_COUNT } from '../setup/setupConstants';
 
+/**
+ * Écran de création des 15 questions avant la partie.
+ * La logique (état, thèmes, import/export, session) vit dans useSetupQuestions.
+ */
 export const SetupQuestions = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMultiplayer = searchParams.get('mode') === 'multi';
-  const fileInputRef = useRef(null);
-  
-  const [questions, setQuestions] = useState(() => 
-    Array.from({ length: 15 }, (_, i) => createEmptyQuestion(i + 1))
-  );
-  const [currentEditIndex, setCurrentEditIndex] = useState(0);
-  const [errors, setErrors] = useState({});
-  const [playerNames, setPlayerNames] = useState(['Joueur 1', 'Joueur 2']);
-  
-  // Timer settings
-  const [timerEnabled, setTimerEnabled] = useState(false);
-  const [timerDuration, setTimerDuration] = useState(30);
-  
-  // Shuffle questions option
-  const [shuffleEnabled, setShuffleEnabled] = useState(false);
-  
-  // Reveal mode: always manual after final answer.
-  const manualReveal = true;
-  
-  // Theme selector
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const [loadedTheme, setLoadedTheme] = useState(null);
-  
-  // Import/Export state
-  const [showImportExport, setShowImportExport] = useState(false);
-  const [importError, setImportError] = useState('');
-  const [importSuccess, setImportSuccess] = useState('');
-  
-  // Custom theme creation
-  const [showSaveThemeModal, setShowSaveThemeModal] = useState(false);
-  const [themeName, setThemeName] = useState('');
-  const [themeDescription, setThemeDescription] = useState('');
-  const [themeColor, setThemeColor] = useState('#8B5CF6');
-  const [saveThemeError, setSaveThemeError] = useState('');
 
-  const currentQuestion = questions[currentEditIndex];
+  const {
+    fileInputRef,
+    questions,
+    currentEditIndex,
+    setCurrentEditIndex,
+    errors,
+    playerNames,
+    setPlayerNames,
+    timerEnabled,
+    setTimerEnabled,
+    timerDuration,
+    onTimerDurationInputChange,
+    shuffleEnabled,
+    setShuffleEnabled,
+    showThemeSelector,
+    setShowThemeSelector,
+    loadedTheme,
+    showImportExport,
+    setShowImportExport,
+    importError,
+    importSuccess,
+    showSaveThemeModal,
+    setShowSaveThemeModal,
+    themeName,
+    setThemeName,
+    themeDescription,
+    setThemeDescription,
+    themeColor,
+    setThemeColor,
+    saveThemeError,
+    setSaveThemeError,
+    currentQuestion,
+    updateQuestion,
+    updateAnswer,
+    setCorrectAnswer,
+    getQuestionStatus,
+    handleExport,
+    handleImport,
+    startGame,
+    handleSelectTheme,
+    handlePlayTheme,
+    openSaveThemeModal,
+    handleSaveCurrentTheme,
+    handleRenameTheme,
+    handleDeleteTheme,
+    completedCount,
+  } = useSetupQuestions(navigate, isMultiplayer);
+
   const currentLevel = MONEY_LEVELS[currentEditIndex];
-
-  const updateQuestion = (field, value) => {
-    setQuestions(prev => {
-      const updated = [...prev];
-      updated[currentEditIndex] = { ...updated[currentEditIndex], [field]: value };
-      return updated;
-    });
-    setErrors(prev => ({ ...prev, [`${currentEditIndex}-${field}`]: null }));
-  };
-
-  const updateAnswer = (answerIndex, value) => {
-    setQuestions(prev => {
-      const updated = [...prev];
-      const answers = [...updated[currentEditIndex].answers];
-      answers[answerIndex] = value;
-      updated[currentEditIndex] = { ...updated[currentEditIndex], answers };
-      return updated;
-    });
-    setErrors(prev => ({ ...prev, [`${currentEditIndex}-answer-${answerIndex}`]: null }));
-  };
-
-  const setCorrectAnswer = (index) => {
-    updateQuestion('correctIndex', index);
-  };
-
-  const validateAllQuestions = () => {
-    const newErrors = {};
-    let isValid = true;
-
-    questions.forEach((q, qIdx) => {
-      if (!q.question.trim()) {
-        newErrors[`${qIdx}-question`] = 'Question requise';
-        isValid = false;
-      }
-      q.answers.forEach((a, aIdx) => {
-        if (!a.trim()) {
-          newErrors[`${qIdx}-answer-${aIdx}`] = 'Réponse requise';
-          isValid = false;
-        }
-      });
-    });
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const getQuestionStatus = (index) => {
-    const q = questions[index];
-    if (!q.question.trim()) return 'empty';
-    const allAnswersFilled = q.answers.every(a => a.trim());
-    return allAnswersFilled ? 'complete' : 'partial';
-  };
-
-  const areAllQuestionsComplete = () =>
-    questions.every((_, index) => getQuestionStatus(index) === 'complete');
-
-  // Export questions to JSON
-  const handleExport = () => {
-    const exportData = {
-      version: '1.0',
-      name: 'Mes Questions QVGDM',
-      createdAt: new Date().toISOString(),
-      timerSettings: {
-        enabled: timerEnabled,
-        duration: timerDuration
-      },
-      questions: questions.map((q, idx) => ({
-        level: idx + 1,
-        amount: MONEY_LEVELS[idx].display,
-        question: q.question,
-        answers: {
-          A: q.answers[0],
-          B: q.answers[1],
-          C: q.answers[2],
-          D: q.answers[3]
-        },
-        correctAnswer: ANSWER_LETTERS[q.correctIndex]
-      }))
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `qvgdm-questions-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    setImportSuccess('Questions exportées avec succès !');
-    setTimeout(() => setImportSuccess(''), 3000);
-  };
-
-  // Import questions from JSON
-  const handleImport = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target?.result);
-        
-        // Validate the structure
-        if (!data.questions || !Array.isArray(data.questions) || data.questions.length !== 15) {
-          throw new Error('Le fichier doit contenir exactement 15 questions');
-        }
-
-        // Convert imported data to our format
-        const importedQuestions = data.questions.map((q, idx) => ({
-          id: `q-${idx + 1}`,
-          question: q.question || '',
-          answers: [
-            q.answers?.A || '',
-            q.answers?.B || '',
-            q.answers?.C || '',
-            q.answers?.D || ''
-          ],
-          correctIndex: ANSWER_LETTERS.indexOf(q.correctAnswer) >= 0 
-            ? ANSWER_LETTERS.indexOf(q.correctAnswer) 
-            : 0
-        }));
-
-        setQuestions(importedQuestions);
-        
-        // Import timer settings if available
-        if (data.timerSettings) {
-          setTimerEnabled(data.timerSettings.enabled || false);
-          setTimerDuration(data.timerSettings.duration || 30);
-        }
-
-        setImportError('');
-        setImportSuccess('Questions importées avec succès !');
-        setTimeout(() => setImportSuccess(''), 3000);
-      } catch (err) {
-        setImportError(err.message || 'Erreur lors de l\'import du fichier');
-        setImportSuccess('');
-      }
-    };
-    reader.readAsText(file);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const startGame = () => {
-    if (validateAllQuestions()) {
-      // Apply shuffle if enabled
-      const finalQuestions = shuffleEnabled ? shuffleQuestions(questions) : questions;
-      
-      sessionStorage.setItem('gameQuestions', JSON.stringify(finalQuestions));
-      sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
-      sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
-      sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
-      sessionStorage.setItem('manualReveal', JSON.stringify(manualReveal));
-      if (isMultiplayer) {
-        sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
-      }
-      navigate('/game');
-    }
-  };
-
-  // Load a theme
-  const handleSelectTheme = (themeId) => {
-    const themeQuestions = getThemeQuestions(themeId);
-    const selectedTheme = getThemeById(themeId);
-    if (themeQuestions) {
-      setQuestions(themeQuestions);
-      setLoadedTheme(selectedTheme);
-      setErrors({});
-      setCurrentEditIndex(0);
-      setShowThemeSelector(false);
-      setImportSuccess(`Thème "${selectedTheme?.name || 'inconnu'}" chargé avec succès !`);
-      setTimeout(() => setImportSuccess(''), 3000);
-    }
-  };
-
-  const handlePlayTheme = (themeId) => {
-    const themeQuestions = getThemeQuestions(themeId);
-    const selectedTheme = getThemeById(themeId);
-    if (!themeQuestions) return;
-
-    const finalQuestions = shuffleEnabled ? shuffleQuestions(themeQuestions) : themeQuestions;
-
-    sessionStorage.setItem('gameQuestions', JSON.stringify(finalQuestions));
-    sessionStorage.setItem('gameMode', isMultiplayer ? 'multi' : 'solo');
-    sessionStorage.setItem('timerEnabled', JSON.stringify(timerEnabled));
-    sessionStorage.setItem('timerDuration', JSON.stringify(timerDuration));
-    sessionStorage.setItem('manualReveal', JSON.stringify(manualReveal));
-    if (isMultiplayer) {
-      sessionStorage.setItem('playerNames', JSON.stringify(playerNames));
-    }
-
-    setLoadedTheme(selectedTheme);
-    setShowThemeSelector(false);
-    navigate('/game');
-  };
-
-  const openSaveThemeModal = () => {
-    setThemeName(loadedTheme?.isCustom ? loadedTheme.name : '');
-    setThemeDescription(loadedTheme?.isCustom ? loadedTheme.description : '');
-    setThemeColor(loadedTheme?.isCustom ? loadedTheme.color : '#8B5CF6');
-    setSaveThemeError('');
-    setShowSaveThemeModal(true);
-  };
-
-  const handleSaveCurrentTheme = () => {
-    if (!areAllQuestionsComplete()) {
-      setSaveThemeError('Complétez les 15 questions avant de sauvegarder un thème.');
-      return;
-    }
-
-    try {
-      const savedTheme = saveCustomTheme({
-        name: themeName,
-        description: themeDescription,
-        color: themeColor,
-        questions,
-      });
-
-      setLoadedTheme(savedTheme);
-      setShowSaveThemeModal(false);
-      setSaveThemeError('');
-      setImportSuccess(`Thème "${savedTheme.name}" sauvegardé ! Il est maintenant disponible dans la liste.`);
-      setTimeout(() => setImportSuccess(''), 3500);
-    } catch (error) {
-      setSaveThemeError(error.message || 'Impossible de sauvegarder ce thème.');
-    }
-  };
-
-  const handleRenameTheme = ({ themeId, name, description, color }) => {
-    const updatedTheme = renameCustomTheme({ themeId, name, description, color });
-    if (loadedTheme?.id === themeId) {
-      setLoadedTheme(updatedTheme);
-    }
-    setImportSuccess(`Thème "${updatedTheme.name}" modifié avec succès.`);
-    setTimeout(() => setImportSuccess(''), 3000);
-  };
-
-  const handleDeleteTheme = (themeId) => {
-    const deletedTheme = getThemeById(themeId);
-    deleteCustomTheme(themeId);
-
-    if (loadedTheme?.id === themeId) {
-      setLoadedTheme(null);
-    }
-
-    setImportSuccess(`Thème "${deletedTheme?.name || 'personnalisé'}" supprimé.`);
-    setTimeout(() => setImportSuccess(''), 3000);
-  };
-
-  const completedCount = questions.filter((_, i) => getQuestionStatus(i) === 'complete').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1A1A3A] via-[#0B0B1A] to-[#05050A] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* En-tête : navigation, progression, actions rapides */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <button
             className="flex items-center gap-2 text-[#B0B0C0] hover:text-white transition-colors"
@@ -318,19 +94,19 @@ export const SetupQuestions = () => {
             <ArrowLeft size={20} />
             <span>Retour</span>
           </button>
-          
+
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-bold font-['Chivo'] text-white">
               Créer vos questions
             </h1>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <p className="text-[#D8D8E8] text-sm font-medium">
-                {completedCount}/15 questions complètes
+                {completedCount}/{SETUP_QUESTION_COUNT} questions complètes
               </p>
               {loadedTheme && (
-                <span 
+                <span
                   className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                  style={{ 
+                  style={{
                     background: `${loadedTheme.color}20`,
                     color: loadedTheme.color,
                     border: `1px solid ${loadedTheme.color}40`,
@@ -341,7 +117,7 @@ export const SetupQuestions = () => {
                 </span>
               )}
               {shuffleEnabled && (
-                <span 
+                <span
                   className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E91E63]/20 text-[#E91E63] border border-[#E91E63]/40"
                   data-testid="shuffle-badge"
                 >
@@ -350,7 +126,7 @@ export const SetupQuestions = () => {
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               className="btn-secondary flex items-center gap-2 text-sm"
@@ -379,7 +155,7 @@ export const SetupQuestions = () => {
             <button
               className="btn-primary flex items-center gap-2 text-sm"
               onClick={startGame}
-              disabled={completedCount < 15}
+              disabled={completedCount < SETUP_QUESTION_COUNT}
               data-testid="start-game-btn"
             >
               <Play size={18} />
@@ -388,7 +164,7 @@ export const SetupQuestions = () => {
           </div>
         </div>
 
-        {/* Import/Export & Timer Panel */}
+        {/* Panneau repliable : import/export JSON, timer, mélange, texte révélation manuelle */}
         <AnimatePresence>
           {showImportExport && (
             <motion.div
@@ -398,7 +174,6 @@ export const SetupQuestions = () => {
               exit={{ opacity: 0, height: 0 }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Import/Export */}
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                     <Download size={18} className="text-[#00E5FF]" />
@@ -434,7 +209,6 @@ export const SetupQuestions = () => {
                   )}
                 </div>
 
-                {/* Timer Settings */}
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                     <Clock size={18} className="text-[#FFD700]" />
@@ -458,7 +232,7 @@ export const SetupQuestions = () => {
                           min="10"
                           max="120"
                           value={timerDuration}
-                          onChange={(e) => setTimerDuration(Math.max(10, Math.min(120, parseInt(e.target.value) || 30)))}
+                          onChange={onTimerDurationInputChange}
                           className="game-input w-20 text-center"
                           data-testid="timer-duration"
                         />
@@ -472,8 +246,7 @@ export const SetupQuestions = () => {
                     </p>
                   )}
                 </div>
-                
-                {/* Shuffle Order */}
+
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                     <Shuffle size={18} className="text-[#E91E63]" />
@@ -490,13 +263,13 @@ export const SetupQuestions = () => {
                     </span>
                   </div>
                   <p className="text-[#B0B0C0] text-xs mt-2">
-                    {shuffleEnabled 
+                    {shuffleEnabled
                       ? 'Les 15 questions seront posées dans un ordre aléatoire. Chaque partie sera différente !'
-                      : 'Les questions seront posées dans l\'ordre que vous avez défini.'}
+                      : "Les questions seront posées dans l'ordre que vous avez défini."}
                   </p>
                 </div>
 
-                {/* Manual reveal (always enabled) */}
+                {/* Comportement aligné sur gameConstants (MANUAL_REVEAL_ENABLED) — rappel utilisateur */}
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                     <Eye size={18} className="text-[#FFD700]" />
@@ -511,7 +284,7 @@ export const SetupQuestions = () => {
           )}
         </AnimatePresence>
 
-        {/* Multiplayer names */}
+        {/* Multijoueur : noms persistés avec la session */}
         {isMultiplayer && (
           <motion.div
             className="glass-light rounded-lg p-4 mb-6"
@@ -539,7 +312,7 @@ export const SetupQuestions = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Questions list sidebar */}
+          {/* Liste des 15 paliers : navigation + indicateur de complétion */}
           <div className="lg:col-span-1">
             <div className="glass rounded-lg p-4 sticky top-4">
               <h3 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
@@ -550,7 +323,7 @@ export const SetupQuestions = () => {
                   const status = getQuestionStatus(index);
                   const isActive = currentEditIndex === index;
                   const level = MONEY_LEVELS[index];
-                  
+
                   return (
                     <button
                       key={index}
@@ -579,7 +352,7 @@ export const SetupQuestions = () => {
             </div>
           </div>
 
-          {/* Question editor */}
+          {/* Formulaire : intitulé + 4 réponses + bonne réponse */}
           <div className="lg:col-span-3">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -590,7 +363,6 @@ export const SetupQuestions = () => {
                 exit={{ opacity: 1, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Level indicator */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <span className="text-[#00E5FF] text-sm uppercase tracking-wider">
@@ -607,7 +379,6 @@ export const SetupQuestions = () => {
                   )}
                 </div>
 
-                {/* Question input */}
                 <div className="mb-6">
                   <label className="block text-[#B0B0C0] text-sm mb-2">
                     Question
@@ -624,18 +395,17 @@ export const SetupQuestions = () => {
                   )}
                 </div>
 
-                {/* Answers */}
                 <div className="space-y-3">
                   <label className="block text-[#B0B0C0] text-sm">
                     Réponses (cliquez sur le bouton pour définir la bonne réponse)
                   </label>
-                  
+
                   {currentQuestion.answers.map((answer, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <button
                         className={`letter-badge flex-shrink-0 cursor-pointer transition-all ${
-                          currentQuestion.correctIndex === idx 
-                            ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-[#1A1A3A]' 
+                          currentQuestion.correctIndex === idx
+                            ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-[#1A1A3A]'
                             : 'opacity-60 hover:opacity-100'
                         }`}
                         onClick={() => setCorrectAnswer(idx)}
@@ -658,7 +428,6 @@ export const SetupQuestions = () => {
                   ))}
                 </div>
 
-                {/* Navigation */}
                 <div className="flex justify-between mt-6 pt-4 border-t border-white/10">
                   <button
                     className="btn-secondary"
@@ -670,8 +439,8 @@ export const SetupQuestions = () => {
                   </button>
                   <button
                     className="btn-primary"
-                    onClick={() => setCurrentEditIndex(Math.min(14, currentEditIndex + 1))}
-                    disabled={currentEditIndex === 14}
+                    onClick={() => setCurrentEditIndex(Math.min(SETUP_QUESTION_COUNT - 1, currentEditIndex + 1))}
+                    disabled={currentEditIndex === SETUP_QUESTION_COUNT - 1}
                     data-testid="next-question-btn"
                   >
                     Suivant
@@ -683,7 +452,7 @@ export const SetupQuestions = () => {
         </div>
       </div>
 
-      {/* Theme Selector Modal */}
+      {/* Modale bibliothèque (thèmes intégrés + perso) */}
       <ThemeSelector
         isOpen={showThemeSelector}
         onClose={() => setShowThemeSelector(false)}
@@ -693,7 +462,7 @@ export const SetupQuestions = () => {
         onDeleteTheme={handleDeleteTheme}
       />
 
-      {/* Save Theme Modal */}
+      {/* Création d’un thème perso à partir du formulaire courant */}
       <AnimatePresence>
         {showSaveThemeModal && (
           <motion.div
