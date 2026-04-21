@@ -148,9 +148,9 @@ h1, h2, h3, h4, h5, h6 {
   animation: shake 0.3s ease-in-out 2;
 }
 
-/* Studio background */
+/* Studio background — fichier dans src/assets/ (import Webpack ; pas public/) */
 .studio-bg {
-  background-image: url('https://static.prod-images.emergentagent.com/jobs/201663b8-c6e5-4fe3-9467-f84ce9541ef8/images/8998f07639f87d3e7809cdda593c76b01e0b0229e1dc2042beb2be3c3d7be149.png');
+  background-image: url('../public/studio-bg.jpeg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
