@@ -74,6 +74,7 @@ export function useGame(navigate) {
     setSelectedAnswer(null);
     setAnswerStates(DEFAULT_ANSWER_STATES);
     setEliminatedAnswers([]);
+    setAudienceResults(null);
   }, []);
 
   useEffect(() => {
