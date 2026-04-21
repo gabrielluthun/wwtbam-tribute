@@ -145,6 +145,7 @@ class SoundManager {
     const sources = new Set();
 
     Object.values(LEVEL_SOUNDS).forEach((conf) => {
+      if (conf?.bed) sources.add(conf.bed);
       if (conf?.letsPlay) sources.add(conf.letsPlay);
       if (conf?.final) sources.add(conf.final);
       if (conf?.win) sources.add(conf.win);
@@ -212,8 +213,14 @@ class SoundManager {
     if (this.bed && this.bedSrc === conf.bed && !this.bed.paused) return;
     this.stopBed();
     try {
-      const audio = new Audio(conf.bed);
+      let audio = this.oneShotCache.get(conf.bed);
+      if (!audio) {
+        audio = new Audio(conf.bed);
+        audio.preload = 'auto';
+        this.oneShotCache.set(conf.bed, audio);
+      }
       audio.loop = true;
+      audio.currentTime = 0;
       audio.volume = this.volume * this.bedVolume;
       audio.play().catch(() => {});
       this.bed = audio;
