@@ -20,6 +20,7 @@ export const Game = () => {
     phoneResponse,
     showPhoneDialog,
     audienceResults,
+    audienceMessage,
     showAudienceDialog,
     timerEnabled,
     timeRemaining,
@@ -56,7 +57,7 @@ export const Game = () => {
   if (!currentQuestion) {
     return (
       <div className="min-h-screen studio-bg flex items-center justify-center">
-        <div className="text-white">Chargement...</div>
+        <div style={{ color: 'var(--text-primary)' }}>Chargement...</div>
       </div>
     );
   }
@@ -70,7 +71,7 @@ export const Game = () => {
 
     return (
       <div className="min-h-screen studio-bg flex items-center justify-center p-6">
-        <div className="absolute inset-0 bg-[#0B0B1A]/80" />
+        <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
 
         <motion.div
           className="relative z-10 glass rounded-2xl p-8 max-w-lg w-full text-center"
@@ -160,25 +161,29 @@ export const Game = () => {
 
   return (
     <div className="min-h-screen studio-bg">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B1A]/70 via-[#0B0B1A]/50 to-[#0B0B1A]/80" />
+      <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
 
       <div className="relative z-10 min-h-screen flex">
         <div className="flex-1 flex flex-col p-4 sm:p-6 lg:pr-72">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full transition-colors"
+                style={{ background: 'var(--top-btn-bg)' }}
                 onClick={() => navigate('/')}
                 data-testid="back-home-btn"
               >
-                <Home size={20} className="text-white" />
+                <Home size={20} style={{ color: 'var(--text-primary)' }} />
               </button>
               <button
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full transition-colors"
+                style={{ background: 'var(--top-btn-bg)' }}
                 onClick={toggleMute}
                 data-testid="mute-btn"
               >
-                {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+                {isMuted
+                  ? <VolumeX size={20} style={{ color: 'var(--text-primary)' }} />
+                  : <Volume2 size={20} style={{ color: 'var(--text-primary)' }} />}
               </button>
               {timerEnabled && <TimerDisplay timeRemaining={timeRemaining} />}
             </div>
@@ -191,11 +196,12 @@ export const Game = () => {
             )}
 
             <button
-              className="lg:hidden p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              className="lg:hidden p-2 rounded-full transition-colors"
+              style={{ background: 'var(--top-btn-bg)' }}
               onClick={() => setShowMoneyTree(true)}
               data-testid="show-money-tree-btn"
             >
-              <Menu size={20} className="text-white" />
+              <Menu size={20} style={{ color: 'var(--text-primary)' }} />
             </button>
 
             <button
@@ -231,7 +237,7 @@ export const Game = () => {
             initial={false}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-white text-lg sm:text-xl lg:text-2xl text-center font-medium" data-testid="question-text">
+            <p className="text-lg sm:text-xl lg:text-2xl text-center font-medium" style={{ color: 'var(--text-primary)' }} data-testid="question-text">
               {currentQuestion.question}
             </p>
           </motion.div>
@@ -380,7 +386,8 @@ export const Game = () => {
 
       <AudienceResults
         isOpen={showAudienceDialog}
-        results={audienceResults || [0, 0, 0, 0]}
+        results={audienceResults}
+        message={audienceMessage}
         onClose={closeAudienceDialog}
       />
     </div>

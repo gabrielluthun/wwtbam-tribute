@@ -67,7 +67,6 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
       className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      onClick={onClose}
     >
       <motion.div
         className="phone-dialog max-w-md mx-4"
@@ -82,7 +81,11 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
           </div>
           <div>
             <h3 className="text-white font-bold font-['Chivo']">Appel à un ami</h3>
-            <p className="text-[#B0B0C0] text-sm">Confiance: {response?.confidence}%</p>
+            {typeof response?.confidence === 'number' ? (
+              <p className="text-[#B0B0C0] text-sm">Confiance: {response.confidence}%</p>
+            ) : (
+              <p className="text-[#B0B0C0] text-sm">En cours...</p>
+            )}
           </div>
         </div>
         
@@ -91,7 +94,8 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
         </p>
         
         <button
-          className="btn-secondary w-full"
+          className={`btn-secondary w-full ${response?.isPending ? 'opacity-10 cursor-not-allowed' : ''}`}
+          disabled={response?.isPending}
           onClick={onClose}
           data-testid="close-phone-dialog"
         >
@@ -103,17 +107,17 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
 };
 
 // Audience Results Component
-export const AudienceResults = ({ isOpen, results, onClose }) => {
+export const AudienceResults = ({ isOpen, results, message, onClose }) => {
   if (!isOpen) return null;
 
   const letters = ['A', 'B', 'C', 'D'];
+  const hasResults = Array.isArray(results) && results.some((percent) => percent > 0);
 
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      onClick={onClose}
     >
       <motion.div
         className="phone-dialog max-w-md mx-4 w-full"
@@ -129,24 +133,31 @@ export const AudienceResults = ({ isOpen, results, onClose }) => {
           <h3 className="text-white font-bold font-['Chivo']">Avis du public</h3>
         </div>
         
-        <div className="flex items-end justify-around h-48 mb-4">
-          {results.map((percent, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-2">
-              <motion.div
-                className="w-12 audience-bar"
-                initial={{ height: 0 }}
-                animate={{ height: `${percent * 1.5}px` }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                data-testid={`audience-bar-${letters[idx].toLowerCase()}`}
-              />
-              <span className="text-white font-bold">{letters[idx]}</span>
-              <span className="text-[#00E5FF] text-sm">{percent}%</span>
-            </div>
-          ))}
-        </div>
+        {hasResults ? (
+          <div className="flex items-end justify-around h-48 mb-4">
+            {results.map((percent, idx) => (
+              <div key={idx} className="flex flex-col items-center gap-2">
+                <motion.div
+                  className="w-12 audience-bar"
+                  initial={{ height: 0 }}
+                  animate={{ height: `${percent * 1.5}px` }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  data-testid={`audience-bar-${letters[idx].toLowerCase()}`}
+                />
+                <span className="text-white font-bold">{letters[idx]}</span>
+                <span className="text-[#00E5FF] text-sm">{percent}%</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-48 mb-4 flex items-center justify-center">
+            <p className="text-[#B0B0C0] text-center">{message || 'Le public réfléchit...'}</p>
+          </div>
+        )}
         
         <button
-          className="btn-secondary w-full"
+          className={`btn-secondary w-full ${hasResults ? '' : 'opacity-10 cursor-not-allowed'}`}
+          disabled={!hasResults}
           onClick={onClose}
           data-testid="close-audience-dialog"
         >

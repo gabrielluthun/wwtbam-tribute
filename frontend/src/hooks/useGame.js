@@ -34,6 +34,7 @@ export function useGame(navigate) {
   const [phoneResponse, setPhoneResponse] = useState(null);
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [audienceResults, setAudienceResults] = useState(null);
+  const [audienceMessage, setAudienceMessage] = useState('');
   const [showAudienceDialog, setShowAudienceDialog] = useState(false);
 
   const {
@@ -50,6 +51,9 @@ export function useGame(navigate) {
   const isManualRevealActive = MANUAL_REVEAL_ENABLED && currentLevel >= 6;
   const revealResolverRef = useRef(null);
   const nextQuestionResolverRef = useRef(null);
+  const phoneResponseTimeoutRef = useRef(null);
+  const audienceResponseTimeoutRef = useRef(null);
+  const audienceMessageTimeoutsRef = useRef([]);
   const [isAwaitingNextQuestionClick, setIsAwaitingNextQuestionClick] = useState(false);
 
   const [isMuted, setIsMuted] = useState(false);
@@ -75,6 +79,7 @@ export function useGame(navigate) {
     setAnswerStates(DEFAULT_ANSWER_STATES);
     setEliminatedAnswers([]);
     setAudienceResults(null);
+    setAudienceMessage('');
   }, []);
 
   useEffect(() => {
@@ -112,6 +117,18 @@ export function useGame(navigate) {
 
     return () => {
       cancelled = true;
+      if (phoneResponseTimeoutRef.current) {
+        clearTimeout(phoneResponseTimeoutRef.current);
+        phoneResponseTimeoutRef.current = null;
+      }
+      if (audienceResponseTimeoutRef.current) {
+        clearTimeout(audienceResponseTimeoutRef.current);
+        audienceResponseTimeoutRef.current = null;
+      }
+      audienceMessageTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+      audienceMessageTimeoutsRef.current = [];
+      soundManager.stopPhoneFriend();
+      soundManager.stopAskAudience();
       soundManager.stopBackground();
       soundManager.stopTimerTick();
     };
@@ -264,37 +281,81 @@ export function useGame(navigate) {
   const handlePhoneFriend = useCallback(() => {
     if (usedJokers.phone || gameState !== GAME_STATES.PLAYING) return;
 
-    soundManager.playPhoneFriend();
+    soundManager.stopBed();
     setUsedJokers((prev) => ({ ...prev, phone: true }));
     setTimerPaused(true);
-
-    const correctAnswer = currentQuestion.answers[currentQuestion.correctIndex];
-    const response = getPhoneResponse(correctAnswer, currentQuestion.answers);
-    setPhoneResponse(response);
     setShowPhoneDialog(true);
+    void soundManager.playPhoneFriend();
+    setPhoneResponse({
+      message: "L'ami réfléchit...",
+      confidence: null,
+      isPending: true,
+    });
+
+
+    const thinkingDurationMs = Math.floor(Math.random() * 8000) + 13000;
+    phoneResponseTimeoutRef.current = setTimeout(() => {
+      const correctAnswer = currentQuestion.answers[currentQuestion.correctIndex];
+      const response = getPhoneResponse(correctAnswer, currentQuestion.answers);
+      setPhoneResponse({ ...response, isPending: false });
+      phoneResponseTimeoutRef.current = null;
+    }, thinkingDurationMs);
   }, [usedJokers.phone, gameState, currentQuestion, setTimerPaused]);
 
+  // Audience Dialog
   const handleAskAudience = useCallback(() => {
     if (usedJokers.audience || gameState !== GAME_STATES.PLAYING) return;
 
+    soundManager.stopBed();
     soundManager.playAskAudience();
     setUsedJokers((prev) => ({ ...prev, audience: true }));
     setTimerPaused(true);
-
-    const results = generateAudienceResults(currentQuestion.correctIndex, eliminatedAnswers);
-    setAudienceResults(results);
+    setAudienceResults(null);
+    setAudienceMessage('Le public prend connaissance de la question...');
     setShowAudienceDialog(true);
+    audienceMessageTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    audienceMessageTimeoutsRef.current = [
+      setTimeout(() => {
+        setAudienceMessage('Le public vote...');
+      }, 16000),
+      setTimeout(() => {
+        setAudienceMessage('Vote terminé, envoi des résultats...');
+      },29000),
+    ];
+
+    audienceResponseTimeoutRef.current = setTimeout(() => {
+      const results = generateAudienceResults(currentQuestion.correctIndex, eliminatedAnswers);
+      setAudienceResults(results);
+      setAudienceMessage('Résultats du public');
+      audienceMessageTimeoutsRef.current = [];
+      audienceResponseTimeoutRef.current = null;
+    }, 32000);
   }, [usedJokers.audience, gameState, currentQuestion, eliminatedAnswers, setTimerPaused]);
 
   const closePhoneDialog = useCallback(() => {
+    if (phoneResponseTimeoutRef.current) {
+      clearTimeout(phoneResponseTimeoutRef.current);
+      phoneResponseTimeoutRef.current = null;
+    }
     setShowPhoneDialog(false);
     setTimerPaused(false);
-  }, [setTimerPaused]);
+    soundManager.stopPhoneFriend();
+    soundManager.playBed(currentLevel);
+  }, [currentLevel, setTimerPaused]);
 
   const closeAudienceDialog = useCallback(() => {
+    if (audienceResponseTimeoutRef.current) {
+      clearTimeout(audienceResponseTimeoutRef.current);
+      audienceResponseTimeoutRef.current = null;
+    }
+    audienceMessageTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    audienceMessageTimeoutsRef.current = [];
     setShowAudienceDialog(false);
+    setAudienceMessage('');
     setTimerPaused(false);
-  }, [setTimerPaused]);
+    soundManager.stopAskAudience();
+    soundManager.playBed(currentLevel);
+  }, [currentLevel, setTimerPaused]);
 
   const handleSelectMoneyLevel = useCallback(
     (level) => {
@@ -356,6 +417,7 @@ export function useGame(navigate) {
     phoneResponse,
     showPhoneDialog,
     audienceResults,
+    audienceMessage,
     showAudienceDialog,
     timerEnabled,
     timeRemaining,

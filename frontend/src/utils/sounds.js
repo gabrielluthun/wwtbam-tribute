@@ -265,7 +265,9 @@ class SoundManager {
   playGameStart()    { return Promise.resolve(); }
   playFiftyFifty()   { return this._playOnce(SFX.fiftyFifty); }
   playPhoneFriend()  { return this._playOnce(SFX.phoneFriend); }
+  stopPhoneFriend()  { this._stopAllOneshots(); }
   playAskAudience()  { return this._playOnce(SFX.askAudience); }
+  stopAskAudience()  { this._stopAllOneshots(); }
   playLifeline()     { return this._playOnce(SFX.lifeline); }
   playTimeUp()       { this.stopBed(); return this._playOnce(SFX.timeUp, { stopOthers: true }); }
   playGoodbye()      { return this._playOnce(SFX.goodbye); }
