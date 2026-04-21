@@ -19,8 +19,9 @@ export const MONEY_LEVELS = [
 
 // Get guaranteed amount based on checkpoints
 export const getGuaranteedAmount = (currentLevel) => {
-  if (currentLevel >= 10) return MONEY_LEVELS[9]; // 48 000 €
-  if (currentLevel >= 5) return MONEY_LEVELS[4]; // 1 500 €
+  const completedLevels = currentLevel - 1;
+  if (completedLevels >= 10) return MONEY_LEVELS[9]; // 48 000 € (Q10 réussie)
+  if (completedLevels >= 5) return MONEY_LEVELS[4]; // 1 500 € (Q5 réussie)
   return { level: 0, amount: 0, display: '0 €' };
 };
 
