@@ -85,7 +85,7 @@ export const SetupQuestions = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#1A1A3A] via-[#0B0B1A] to-[#05050A] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* En-tête : navigation, progression, actions rapides */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <div className="flex items-start sm:items-center justify-between mb-6 flex-wrap gap-4">
           <button
             className="flex items-center gap-2 text-[#B0B0C0] hover:text-white transition-colors"
             onClick={() => navigate('/')}
@@ -95,7 +95,7 @@ export const SetupQuestions = () => {
             <span>Retour</span>
           </button>
 
-          <div className="text-center">
+          <div className="text-center w-full sm:w-auto order-3 sm:order-none">
             <h1 className="text-2xl sm:text-3xl font-bold font-['Chivo'] text-white">
               Créer vos questions
             </h1>
@@ -127,9 +127,9 @@ export const SetupQuestions = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full lg:w-auto items-stretch lg:items-center gap-2 flex-wrap">
             <button
-              className="btn-secondary flex items-center gap-2 text-sm"
+              className="btn-secondary flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
               onClick={() => setShowThemeSelector(true)}
               data-testid="open-theme-selector"
             >
@@ -137,7 +137,7 @@ export const SetupQuestions = () => {
               Thèmes
             </button>
             <button
-              className="btn-secondary flex items-center gap-2 text-sm"
+              className="btn-secondary flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
               onClick={openSaveThemeModal}
               data-testid="save-theme-btn"
             >
@@ -145,7 +145,7 @@ export const SetupQuestions = () => {
               Sauvegarder thème
             </button>
             <button
-              className="btn-secondary flex items-center gap-2 text-sm"
+              className="btn-secondary flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
               onClick={() => setShowImportExport(!showImportExport)}
               data-testid="toggle-import-export"
             >
@@ -153,7 +153,7 @@ export const SetupQuestions = () => {
               Options
             </button>
             <button
-              className="btn-primary flex items-center gap-2 text-sm"
+              className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
               onClick={startGame}
               disabled={completedCount < SETUP_QUESTION_COUNT}
               data-testid="start-game-btn"
@@ -292,7 +292,7 @@ export const SetupQuestions = () => {
             animate={{ opacity: 1, y: 0 }}
           >
             <h3 className="text-white font-semibold mb-3">Noms des joueurs</h3>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Input
                 value={playerNames[0]}
                 onChange={(e) => setPlayerNames([e.target.value, playerNames[1]])}

@@ -37,6 +37,7 @@ export const Jokers = ({
       {jokers.map((joker, idx) => (
         <motion.button
           key={joker.id}
+          type="button"
           data-testid={`joker-${joker.id}`}
           className={`joker-btn ${joker.used ? 'used' : ''}`}
           onClick={() => !joker.used && !disabled && joker.onClick()}
@@ -47,6 +48,7 @@ export const Jokers = ({
           whileHover={!joker.used && !disabled ? { scale: 1.1 } : {}}
           whileTap={!joker.used && !disabled ? { scale: 0.95 } : {}}
           title={joker.label}
+          aria-label={`${joker.label}${joker.used ? ' (utilisé)' : ''}`}
         >
           <joker.icon 
             size={24} 
@@ -67,6 +69,7 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
       className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      role="presentation"
     >
       <motion.div
         className="phone-dialog max-w-md mx-4"
@@ -74,6 +77,9 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
         animate={{ scale: 1, opacity: 1 }}
         onClick={e => e.stopPropagation()}
         data-testid="phone-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Appel à un ami"
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full bg-[#00E5FF]/20 flex items-center justify-center">
@@ -89,11 +95,12 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
           </div>
         </div>
         
-        <p className="text-white text-lg italic mb-6">
+        <p className="text-white text-lg italic mb-6" aria-live="polite">
           "{response?.message}"
         </p>
         
         <button
+          type="button"
           className={`btn-secondary w-full ${response?.isPending ? 'opacity-10 cursor-not-allowed' : ''}`}
           disabled={response?.isPending}
           onClick={onClose}
@@ -118,6 +125,7 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
       className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      role="presentation"
     >
       <motion.div
         className="phone-dialog max-w-md mx-4 w-full"
@@ -125,6 +133,9 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
         animate={{ scale: 1, opacity: 1 }}
         onClick={e => e.stopPropagation()}
         data-testid="audience-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Avis du public"
       >
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-full bg-[#00E5FF]/20 flex items-center justify-center">
@@ -156,6 +167,7 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
         )}
         
         <button
+          type="button"
           className={`btn-secondary w-full ${hasResults ? '' : 'opacity-10 cursor-not-allowed'}`}
           disabled={!hasResults}
           onClick={onClose}

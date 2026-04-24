@@ -81,8 +81,10 @@ export const Game = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen studio-bg flex items-center justify-center">
-        <div style={{ color: 'var(--text-primary)' }}>Chargement...</div>
+      <div className="min-h-screen relative overflow-x-hidden flex items-center justify-center">
+        <div className="game-fixed-bg" />
+        <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
+        <div className="relative z-10" style={{ color: 'var(--text-primary)' }}>Chargement...</div>
       </div>
     );
   }
@@ -95,7 +97,8 @@ export const Game = () => {
         : guaranteedMoney.display;
 
     return (
-      <div className="min-h-screen studio-bg flex items-center justify-center p-6">
+      <div className="min-h-screen relative overflow-x-hidden flex items-center justify-center p-6">
+        <div className="game-fixed-bg" />
         <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
 
         <motion.div
@@ -193,7 +196,8 @@ export const Game = () => {
   }
 
   return (
-    <div className="min-h-screen studio-bg">
+    <div className="min-h-screen relative overflow-x-hidden">
+      <div className="game-fixed-bg" />
       <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
 
       <div className="relative z-10 min-h-screen flex">
