@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Volume2, VolumeX, Menu, Home, RotateCcw, Clock, Eye } from 'lucide-react';
+import { Volume2, VolumeX, Home, RotateCcw, Clock, Eye } from 'lucide-react';
 import { AnswerButton } from '../components/AnswerButton';
 import { MoneyTree } from '../components/MoneyTree';
+import { ConfirmActionModal } from '../components/ConfirmActionModal';
 import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers';
 import { TimerDisplay } from '../components/TimerDisplay';
 import { MONEY_LEVELS } from '../utils/gameData';
@@ -11,6 +13,7 @@ import { GAME_STATES } from '../game/gameConstants';
 
 export const Game = () => {
   const navigate = useNavigate();
+  const [confirmAction, setConfirmAction] = useState(null);
   const {
     currentLevel,
     gameState,
@@ -53,6 +56,28 @@ export const Game = () => {
     handleWalkAway,
     handleRestart,
   } = useGame(navigate);
+
+  const openHomeConfirm = () => setConfirmAction('home');
+  const openWalkAwayConfirm = () => {
+    if (gameState !== GAME_STATES.PLAYING) return;
+    setConfirmAction('walkaway');
+  };
+
+  const closeConfirmModal = () => setConfirmAction(null);
+  const confirmCurrentAction = () => {
+    if (confirmAction === 'home') {
+      navigate('/');
+    } else if (confirmAction === 'walkaway') {
+      handleWalkAway();
+    }
+    setConfirmAction(null);
+  };
+
+  const confirmTitle = confirmAction === 'home' ? 'Retourner au menu ?' : 'Partir avec vos gains ?';
+  const confirmDescription = confirmAction === 'home'
+    ? 'Vous allez quitter la partie en cours.'
+    : `Vous allez repartir avec ${currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'}.`;
+  const confirmButtonLabel = confirmAction === 'home' ? 'Oui, quitter' : 'Oui, partir';
 
   if (!currentQuestion) {
     return (
@@ -147,7 +172,7 @@ export const Game = () => {
             </button>
             <button
               className="btn-secondary flex-1 flex items-center justify-center gap-2"
-              onClick={() => navigate('/')}
+              onClick={openHomeConfirm}
               data-testid="home-btn"
             >
               <Home size={20} />
@@ -155,6 +180,14 @@ export const Game = () => {
             </button>
           </div>
         </motion.div>
+        <ConfirmActionModal
+          isOpen={Boolean(confirmAction)}
+          title={confirmTitle}
+          description={confirmDescription}
+          confirmLabel={confirmButtonLabel}
+          onCancel={closeConfirmModal}
+          onConfirm={confirmCurrentAction}
+        />
       </div>
     );
   }
@@ -164,13 +197,13 @@ export const Game = () => {
       <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
 
       <div className="relative z-10 min-h-screen flex">
-        <div className="flex-1 flex flex-col p-4 sm:p-6 lg:pr-72">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+        <div className="flex-1 flex flex-col p-4 pb-28 sm:pb-6 sm:p-6 lg:pr-72">
+          <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <button
                 className="p-2 rounded-full transition-colors"
                 style={{ background: 'var(--top-btn-bg)' }}
-                onClick={() => navigate('/')}
+                onClick={openHomeConfirm}
                 data-testid="back-home-btn"
               >
                 <Home size={20} style={{ color: 'var(--text-primary)' }} />
@@ -189,24 +222,15 @@ export const Game = () => {
             </div>
 
             {gameMode === 'multi' && (
-              <div className="text-center">
+              <div className="text-center ml-auto sm:ml-0">
                 <span className="text-[#B0B0C0] text-sm">Tour de</span>
                 <p className="text-[#FFD700] font-bold">{playerNames[currentPlayer]}</p>
               </div>
             )}
 
             <button
-              className="lg:hidden p-2 rounded-full transition-colors"
-              style={{ background: 'var(--top-btn-bg)' }}
-              onClick={() => setShowMoneyTree(true)}
-              data-testid="show-money-tree-btn"
-            >
-              <Menu size={20} style={{ color: 'var(--text-primary)' }} />
-            </button>
-
-            <button
-              className="btn-secondary text-sm hidden sm:flex"
-              onClick={handleWalkAway}
+              className="btn-secondary text-sm hidden lg:flex"
+              onClick={openWalkAwayConfirm}
               disabled={gameState !== GAME_STATES.PLAYING}
               data-testid="walk-away-btn"
             >
@@ -325,6 +349,24 @@ export const Game = () => {
         />
       </div>
 
+      <div className="mobile-action-bar lg:hidden">
+        <button
+          className="btn-secondary text-sm flex-1"
+          onClick={openWalkAwayConfirm}
+          disabled={gameState !== GAME_STATES.PLAYING}
+          data-testid="walk-away-btn-mobile"
+        >
+          Partir ({currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'})
+        </button>
+        <button
+          className="btn-secondary text-sm"
+          onClick={() => setShowMoneyTree(true)}
+          data-testid="show-money-tree-btn-mobile"
+        >
+          Gains
+        </button>
+      </div>
+
       <PhoneFriendDialog
         isOpen={showPhoneDialog}
         response={phoneResponse}
@@ -389,6 +431,14 @@ export const Game = () => {
         results={audienceResults}
         message={audienceMessage}
         onClose={closeAudienceDialog}
+      />
+      <ConfirmActionModal
+        isOpen={Boolean(confirmAction)}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel={confirmButtonLabel}
+        onCancel={closeConfirmModal}
+        onConfirm={confirmCurrentAction}
       />
     </div>
   );
