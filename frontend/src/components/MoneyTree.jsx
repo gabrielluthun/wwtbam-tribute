@@ -15,7 +15,7 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
       <motion.div 
         data-testid="money-tree"
         className={`money-tree-panel fixed lg:relative right-0 top-0 h-full w-64 p-4 z-50 lg:z-auto
-          ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} 
+          ${isOpen ? 'open' : ''} 
           transition-transform duration-300 lg:transition-none`}
       >
         {/* Close button for mobile */}
