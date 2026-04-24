@@ -205,6 +205,16 @@ button {
   padding: 0.625rem 0.875rem;
 }
 
+.game-fixed-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('../public/studio-bg.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 /* Audience bar chart */
 .audience-bar {
   background: linear-gradient(180deg, #00E5FF 0%, #0091EA 100%);
