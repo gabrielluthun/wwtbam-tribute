@@ -1,6 +1,8 @@
 /* Main App Styles */
 .App {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Question container hexagon frame */
@@ -193,8 +195,11 @@ button {
   bottom: 0;
   z-index: 35;
   display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  gap: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem calc(1rem + env(safe-area-inset-left, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-right, 0px));
   background: rgba(5, 5, 12, 0.92);
   border-top: 1px solid rgba(0, 229, 255, 0.25);
   backdrop-filter: blur(8px);
@@ -209,6 +214,8 @@ button {
   position: fixed;
   inset: 0;
   z-index: 0;
+  width: 100%;
+  max-width: 100%;
   background-image: url('../public/studio-bg.jpeg');
   background-size: cover;
   background-position: center;
@@ -273,6 +280,23 @@ button {
     width: 28px;
     height: 28px;
     font-size: 0.875rem;
+  }
+
+  /* clip-path + border = artefacts en bordure sur mobile ; forme plus simple */
+  .answer-btn.hexagon-btn {
+    clip-path: none;
+    border-radius: 10px;
+  }
+
+  .answer-btn.selected {
+    border-width: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.35);
+  }
+
+  /* pulse-gold étend fortement le box-shadow → débordement horizontal sur petit écran */
+  .answer-btn.selected.animate-pulse-gold {
+    animation: none;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
   }
 }
 

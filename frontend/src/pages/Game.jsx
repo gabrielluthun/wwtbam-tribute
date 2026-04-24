@@ -81,9 +81,9 @@ export const Game = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen relative overflow-x-hidden flex items-center justify-center">
+      <div className="min-h-screen relative w-full max-w-full overflow-x-hidden flex items-center justify-center">
         <div className="game-fixed-bg" />
-        <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
+        <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
         <div className="relative z-10" style={{ color: 'var(--text-primary)' }}>Chargement...</div>
       </div>
     );
@@ -97,12 +97,12 @@ export const Game = () => {
         : guaranteedMoney.display;
 
     return (
-      <div className="min-h-screen relative overflow-x-hidden flex items-center justify-center p-6">
+      <div className="min-h-screen relative w-full max-w-full overflow-x-hidden flex items-center justify-center p-6">
         <div className="game-fixed-bg" />
-        <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
+        <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
 
         <motion.div
-          className="relative z-10 glass rounded-2xl p-8 max-w-lg w-full text-center"
+          className="relative z-10 glass rounded-2xl p-5 sm:p-8 max-w-lg w-full min-w-0 max-h-[min(90dvh,90vh)] overflow-y-auto text-center"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           data-testid="game-over-screen"
@@ -196,12 +196,12 @@ export const Game = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen relative w-full max-w-full overflow-x-hidden">
       <div className="game-fixed-bg" />
-      <div className="absolute inset-0" style={{ background: 'var(--overlay-screen)' }} />
+      <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
 
-      <div className="relative z-10 min-h-screen flex">
-        <div className="flex-1 flex flex-col p-4 pb-28 sm:pb-6 sm:p-6 lg:pr-72">
+      <div className="relative z-10 flex min-h-screen w-full max-w-full min-w-0 flex-col lg:flex-row">
+        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 sm:p-6 lg:pr-72">
           <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <button
@@ -270,7 +270,7 @@ export const Game = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto w-full mb-6">
+          <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:max-w-4xl sm:mx-auto mb-6">
             {currentQuestion.answers.map((answer, index) => (
               <AnswerButton
                 key={index}
@@ -287,20 +287,20 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.SELECTED && (
               <motion.div
-                className="flex justify-center gap-4 max-w-md mx-auto w-full"
+                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
               >
                 <button
-                  className="btn-secondary flex-1"
+                  className="btn-secondary flex-1 w-full sm:w-auto"
                   onClick={handleCancelSelection}
                   data-testid="cancel-answer-btn"
                 >
                   Annuler
                 </button>
                 <button
-                  className="btn-primary flex-1"
+                  className="btn-primary flex-1 w-full sm:w-auto text-sm sm:text-base py-3 sm:py-4 leading-tight"
                   onClick={handleConfirmAnswer}
                   data-testid="confirm-answer-btn"
                 >
@@ -380,7 +380,7 @@ export const Game = () => {
       <AnimatePresence>
         {(gameState === GAME_STATES.INTRO || gameState === GAME_STATES.TRANSITION) && (
           <motion.div
-            className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-0 bg-[#0B0B1A]/85 backdrop-blur-sm"
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-0 overflow-x-hidden overflow-y-auto bg-[#0B0B1A]/85 px-3 py-8 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -398,7 +398,7 @@ export const Game = () => {
                 {gameState === GAME_STATES.INTRO ? 'Prêt ?' : `Question ${overlayLevel}`}
               </p>
               <motion.h1
-                className={`text-5xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] ${
+                className={`text-3xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] break-words px-1 ${
                   overlayMoney.checkpoint ? 'text-[#00E5FF] text-glow-cyan' : 'text-[#FFD700] text-glow-gold'
                 }`}
                 animate={{ scale: [1, 1.05, 1] }}
