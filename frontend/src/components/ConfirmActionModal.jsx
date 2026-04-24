@@ -40,5 +40,3 @@ export const ConfirmActionModal = ({
     )}
   </AnimatePresence>
 );
-
-export default ConfirmActionModal;

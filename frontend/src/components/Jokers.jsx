@@ -179,5 +179,3 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
     </motion.div>
   );
 };
-
-export default Jokers;

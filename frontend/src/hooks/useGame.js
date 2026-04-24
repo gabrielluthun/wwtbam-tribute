@@ -13,7 +13,6 @@ import {
   OUTCOME_MAX_MS,
   LETSPLAY_MIN_MS,
   LETSPLAY_MAX_MS,
-  INTRO_MAX_MS,
   SILENCE_BETWEEN_MS,
   TRANSITION_OVERLAY_LEAD_MS,
   MANUAL_REVEAL_ENABLED,
@@ -66,9 +65,6 @@ export function useGame(navigate) {
   const [scores, setScores] = useState([0, 0]);
 
   const runIntroToPlaying = useCallback(async (isCancelled = () => false) => {
-    const introPromise = soundManager.playGameStart();
-    await waitForSound(introPromise, 0, INTRO_MAX_MS);
-    await sleep(SILENCE_BETWEEN_MS);
     if (isCancelled()) return;
     setGameState(GAME_STATES.PLAYING);
     soundManager.playBed(1);
@@ -130,7 +126,6 @@ export function useGame(navigate) {
       soundManager.stopPhoneFriend();
       soundManager.stopAskAudience();
       soundManager.stopBackground();
-      soundManager.stopTimerTick();
     };
   }, [navigate, runIntroToPlaying, setTimerEnabled, setTimerDuration, setTimeRemaining]);
 
@@ -158,7 +153,6 @@ export function useGame(navigate) {
 
     setGameState(GAME_STATES.REVEALING);
     soundManager.playFinalAnswer(currentLevel);
-    soundManager.stopTimerTick();
 
     if (isManualRevealActive) {
       setGameState(GAME_STATES.AWAITING_REVEAL);
@@ -205,12 +199,15 @@ export function useGame(navigate) {
         });
         nextQuestionResolverRef.current = null;
         setIsAwaitingNextQuestionClick(false);
+        // Q6+ : bed de la question suivante tout de suite, puis coupe net win / let’s play encore actifs.
+        soundManager.startQuestionBedAfterTransition(nextLevel);
+      } else {
+        soundManager.playBed(nextLevel);
       }
 
       setGameState(GAME_STATES.PLAYING);
       setTransitionLevel(null);
       setTimerPaused(false);
-      soundManager.playBed(nextLevel);
     } else {
       setAnswerStates((prev) =>
         prev.map((s, i) => {
@@ -379,7 +376,6 @@ export function useGame(navigate) {
   }, []);
 
   const handleWalkAway = useCallback(() => {
-    soundManager.stopTimerTick();
     soundManager.stopBed();
     soundManager.playGoodbye();
     if (gameMode === 'multi') {

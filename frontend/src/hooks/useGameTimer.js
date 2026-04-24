@@ -3,8 +3,7 @@ import { soundManager } from '../utils/sounds';
 import { GAME_STATES } from '../game/gameConstants';
 
 /**
- * Timer de question : décompte, sons d’avertissement / fin, reset au changement de palier.
- * Reste synchronisé avec gameState (actif seulement en PLAYING et si non en pause).
+ * Timer de question : décompte et son de fin (time up).
  */
 export function useGameTimer({ gameState, setGameState, currentLevel }) {
   const [timerEnabled, setTimerEnabled] = useState(false);
@@ -17,26 +16,20 @@ export function useGameTimer({ gameState, setGameState, currentLevel }) {
     if (!timerEnabled || gameState !== GAME_STATES.PLAYING || timerPaused) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
-        soundManager.stopTimerTick();
+        timerRef.current = null;
       }
       return;
     }
-
-    soundManager.startTimerTick();
 
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          soundManager.playTimerExpired();
+          timerRef.current = null;
+          soundManager.playTimeUp();
           setGameState(GAME_STATES.TIMEOUT);
           return 0;
         }
-
-        if (prev === 11) {
-          soundManager.playTimerWarning();
-        }
-
         return prev - 1;
       });
     }, 1000);
@@ -44,8 +37,8 @@ export function useGameTimer({ gameState, setGameState, currentLevel }) {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
-      soundManager.stopTimerTick();
     };
   }, [timerEnabled, gameState, timerPaused, currentLevel, setGameState]);
 

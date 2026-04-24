@@ -52,5 +52,3 @@ export const AnswerButton = ({
     </motion.button>
   );
 };
-
-export default AnswerButton;

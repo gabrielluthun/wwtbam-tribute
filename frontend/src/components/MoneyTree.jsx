@@ -85,5 +85,3 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
     </>
   );
 };
-
-export default MoneyTree;

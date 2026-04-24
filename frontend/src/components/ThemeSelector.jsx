@@ -390,5 +390,3 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
     </AnimatePresence>
   );
 };
-
-export default ThemeSelector;

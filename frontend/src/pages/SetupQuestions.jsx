@@ -556,5 +556,3 @@ export const SetupQuestions = () => {
     </div>
   );
 };
-
-export default SetupQuestions;
