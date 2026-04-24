@@ -29,7 +29,7 @@ export const AnswerButton = ({
   return (
     <motion.button
       data-testid={`answer-btn-${letter.toLowerCase()}`}
-      className={`${getStateClasses()} hexagon-btn w-full py-4 px-6 flex items-center gap-4 text-left ${disabled ? 'disabled' : ''}`}
+      className={`${getStateClasses()} hexagon-btn w-full min-w-0 max-w-full py-4 px-4 sm:px-6 flex items-center gap-3 sm:gap-4 text-left ${disabled ? 'disabled' : ''}`}
       onClick={() => !disabled && state !== 'eliminated' && onClick(index)}
       disabled={disabled || state === 'eliminated'}
       initial={false}
@@ -41,7 +41,7 @@ export const AnswerButton = ({
       <div className="letter-badge flex-shrink-0">
         {letter}
       </div>
-      <span className="text-white font-medium text-base sm:text-lg flex-1">
+      <span className="text-white font-medium text-base sm:text-lg flex-1 min-w-0 break-words">
         {answer || '...'}
       </span>
       {audiencePercent !== undefined && (
