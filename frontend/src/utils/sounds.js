@@ -293,7 +293,8 @@ class SoundManager {
   }
 
   playCorrect(level) {
-    if (level >= 6) this.stopBed();
+    // Q5 (1er palier) : couper q_tier1 avant le jingle milestone ; Q6+ idem pour le bed de question.
+    if (level >= 5) this.stopBed();
     const conf = LEVEL_SOUNDS[level];
     return this._playOnce(conf?.win, { stopOthers: true });
   }
