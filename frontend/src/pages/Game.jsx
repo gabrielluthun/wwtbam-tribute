@@ -11,6 +11,10 @@ import { MONEY_LEVELS } from '../utils/gameData';
 import { useGame } from '../hooks/useGame';
 import { GAME_STATES } from '../game/gameConstants';
 
+/** Boutons d’action sur l’overlay intro / transition (même style). */
+const OVERLAY_CTA_CLASSES =
+  'btn-primary mt-10 px-8 py-3 text-base sm:text-lg font-bold shadow-[0_0_24px_rgba(255,215,0,0.35)] border border-[#FFD700]/50 transition-none';
+
 export const Game = () => {
   const navigate = useNavigate();
   const [confirmAction, setConfirmAction] = useState(null);
@@ -28,6 +32,8 @@ export const Game = () => {
     timerEnabled,
     timeRemaining,
     isAwaitingNextQuestionClick,
+    showIntroStartButton,
+    handleBeginIntroGame,
     isMuted,
     showMoneyTree,
     setShowMoneyTree,
@@ -395,7 +401,7 @@ export const Game = () => {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <p className="text-[#00E5FF] text-sm sm:text-base uppercase tracking-[0.3em] mb-4">
-                {gameState === GAME_STATES.INTRO ? 'Prêt ?' : `Question ${overlayLevel}`}
+                {`Question ${overlayLevel}`}
               </p>
               <motion.h1
                 className={`text-3xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] break-words px-1 ${
@@ -404,9 +410,7 @@ export const Game = () => {
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8 }}
               >
-                {gameState === GAME_STATES.INTRO
-                  ? `${MONEY_LEVELS[0].display}`
-                  : `Pour ${overlayMoney.display}`}
+                {`Pour ${overlayMoney.display}`}
               </motion.h1>
               {overlayMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
                 <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">
@@ -414,12 +418,22 @@ export const Game = () => {
                 </p>
               )}
             </motion.div>
+            {gameState === GAME_STATES.INTRO && showIntroStartButton && (
+              <button
+                type="button"
+                className={OVERLAY_CTA_CLASSES}
+                onClick={handleBeginIntroGame}
+                data-testid="begin-game-btn"
+              >
+                Débuter la partie
+              </button>
+            )}
             {gameState === GAME_STATES.TRANSITION &&
               isAwaitingNextQuestionClick &&
               overlayLevel >= 6 && (
                 <button
                   type="button"
-                  className="btn-primary mt-10 px-8 py-3 text-base sm:text-lg font-bold shadow-[0_0_24px_rgba(255,215,0,0.35)] border border-[#FFD700]/50 transition-none"
+                  className={OVERLAY_CTA_CLASSES}
                   onClick={handleContinueToNextQuestion}
                   data-testid="next-question-after-amount-btn"
                 >
