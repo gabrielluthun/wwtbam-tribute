@@ -16,6 +16,7 @@ import {
   SILENCE_BETWEEN_MS,
   TRANSITION_OVERLAY_LEAD_MS,
   MANUAL_REVEAL_ENABLED,
+  INTRO_START_BUTTON_MS,
 } from '../game/gameConstants';
 import { sleep, waitForSound } from '../game/gameAudio';
 import { pickTwoWrongAnswersToEliminate } from '../game/jokerUtils';
@@ -50,6 +51,7 @@ export function useGame(navigate) {
   const isManualRevealActive = MANUAL_REVEAL_ENABLED && currentLevel >= 6;
   const revealResolverRef = useRef(null);
   const nextQuestionResolverRef = useRef(null);
+  const introStartButtonTimerRef = useRef(null);
   const phoneResponseTimeoutRef = useRef(null);
   const audienceResponseTimeoutRef = useRef(null);
   const audienceMessageTimeoutsRef = useRef([]);
@@ -63,12 +65,31 @@ export function useGame(navigate) {
   const [playerNames, setPlayerNames] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [scores, setScores] = useState([0, 0]);
+  const [showIntroStartButton, setShowIntroStartButton] = useState(false);
 
-  const runIntroToPlaying = useCallback(async (isCancelled = () => false) => {
-    if (isCancelled()) return;
-    setGameState(GAME_STATES.PLAYING);
-    soundManager.playBed(1);
+  const clearIntroStartButtonTimer = useCallback(() => {
+    if (introStartButtonTimerRef.current != null) {
+      clearTimeout(introStartButtonTimerRef.current);
+      introStartButtonTimerRef.current = null;
+    }
   }, []);
+
+  const startIntroSequence = useCallback(() => {
+    setShowIntroStartButton(false);
+    clearIntroStartButtonTimer();
+    void soundManager.playStartGame();
+    introStartButtonTimerRef.current = window.setTimeout(() => {
+      setShowIntroStartButton(true);
+      introStartButtonTimerRef.current = null;
+    }, INTRO_START_BUTTON_MS);
+  }, [clearIntroStartButtonTimer]);
+
+  const handleBeginIntroGame = useCallback(() => {
+    setShowIntroStartButton(false);
+    clearIntroStartButtonTimer();
+    soundManager.silenceAllVoThenPlayBed(1);
+    setGameState(GAME_STATES.PLAYING);
+  }, [clearIntroStartButtonTimer]);
 
   const resetRoundState = useCallback(() => {
     setSelectedAnswer(null);
@@ -108,11 +129,10 @@ export function useGame(navigate) {
 
     soundManager.init();
     setGameState(GAME_STATES.INTRO);
-    let cancelled = false;
-    void runIntroToPlaying(() => cancelled);
+    startIntroSequence();
 
     return () => {
-      cancelled = true;
+      clearIntroStartButtonTimer();
       if (phoneResponseTimeoutRef.current) {
         clearTimeout(phoneResponseTimeoutRef.current);
         phoneResponseTimeoutRef.current = null;
@@ -125,9 +145,9 @@ export function useGame(navigate) {
       audienceMessageTimeoutsRef.current = [];
       soundManager.stopPhoneFriend();
       soundManager.stopAskAudience();
-      soundManager.stopBackground();
+      soundManager.stopBed();
     };
-  }, [navigate, runIntroToPlaying, setTimerEnabled, setTimerDuration, setTimeRemaining]);
+  }, [navigate, startIntroSequence, clearIntroStartButtonTimer, setTimerEnabled, setTimerDuration, setTimeRemaining]);
 
   const currentQuestion = questions[currentLevel - 1];
   const currentMoney = MONEY_LEVELS[currentLevel - 1];
@@ -168,17 +188,25 @@ export function useGame(navigate) {
 
     if (isCorrect) {
       setAnswerStates((prev) => prev.map((s, i) => (i === selectedAnswer ? 'correct' : s)));
-      const winPromise = soundManager.playCorrect(currentLevel);
 
       if (currentLevel === 15) {
+        void soundManager.playCorrect(currentLevel);
         setGameState(GAME_STATES.MILLION);
         return;
       }
 
-      await waitForSound(winPromise, OUTCOME_MIN_MS, OUTCOME_MAX_MS);
+      const winPromise = soundManager.playCorrect(currentLevel);
+      const milestoneWinFullLength =
+        MONEY_LEVELS[currentLevel - 1]?.checkpoint === true && currentLevel < 15;
+      if (milestoneWinFullLength) {
+        await Promise.all([winPromise, sleep(OUTCOME_MIN_MS)]);
+      } else {
+        await waitForSound(winPromise, OUTCOME_MIN_MS, OUTCOME_MAX_MS);
+      }
       await sleep(SILENCE_BETWEEN_MS);
 
       const nextLevel = currentLevel + 1;
+      soundManager.stopActiveStingers();
       setTransitionLevel(nextLevel);
       setGameState(GAME_STATES.TRANSITION);
       await sleep(TRANSITION_OVERLAY_LEAD_MS);
@@ -400,8 +428,8 @@ export function useGame(navigate) {
     nextQuestionResolverRef.current = null;
     setIsAwaitingNextQuestionClick(false);
     setGameState(GAME_STATES.INTRO);
-    void runIntroToPlaying(() => false);
-  }, [resetRoundState, timerDuration, runIntroToPlaying, setTimeRemaining, setTimerPaused]);
+    startIntroSequence();
+  }, [resetRoundState, timerDuration, startIntroSequence, setTimeRemaining, setTimerPaused]);
 
   return {
     currentLevel,
@@ -418,6 +446,8 @@ export function useGame(navigate) {
     timerEnabled,
     timeRemaining,
     isAwaitingNextQuestionClick,
+    showIntroStartButton,
+    handleBeginIntroGame,
     isMuted,
     showMoneyTree,
     setShowMoneyTree,
