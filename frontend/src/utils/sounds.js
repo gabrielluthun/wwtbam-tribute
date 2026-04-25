@@ -1,8 +1,8 @@
-// Gestionnaire audio : beds q_tier1 / q6..q15, finaux final-answer-q*-* (fenêtre glissante),
+// Gestionnaire audio : beds q_tier1 / q6..q15, finaux final-answer-q*-* (une piste par question Q6–15),
 // jingles win-q* / lose-q*, Let's Play (Q6–15) pour l’overlay de transition.
 // Q6+ : au clic « question suivante », le bed de la question suivante démarre puis les one-shots
 // (win / let’s play encore actifs) sont coupés net — pas de chevauchement type fondu avec le stinger.
-// Plafond 6 s sur win-q1-5 et sur toutes les lose.
+// Win / lose : lecture jusqu’à la fin du fichier (pas de plafond temporel).
 
 import bed_tier1 from '../asset/sounds/q_tier1.mp3';
 import bed_q6 from '../asset/sounds/q6.mp3';
@@ -52,6 +52,7 @@ import phone_friend_sfx from '../asset/sounds/phone_friend.mp3';
 import ask_audience_sfx from '../asset/sounds/ask_audience.mp3';
 import time_up from '../asset/sounds/time_up.mp3';
 import goodbye from '../asset/sounds/goodbye.mp3';
+import start_game from '../asset/sounds/start-game.mp3';
 
 import lets_play_q6 from "../asset/sounds/13 Let's Play €3,000.mp3";
 import lets_play_q7 from "../asset/sounds/18 Let's Play €6,000.mp3";
@@ -64,32 +65,27 @@ import lets_play_q13 from "../asset/sounds/48 Let's Play €150,000.mp3";
 import lets_play_q14 from "../asset/sounds/53 Let's Play €300,000.mp3";
 import lets_play_q15 from "../asset/sounds/58 Let's Play €1,000,000.mp3";
 
-/** Final answer : plage [start,end] ; on prend celle avec le plus grand start contenant le niveau (montée progressive). */
+/**
+ * Final answer Q6–15 : une piste par « début de fenêtre » (6→q6-11 … 10→q10-15).
+ * Q11–15 réutilisent les 5 mêmes fichiers dans l’ordre (q6-11 … q10-15), pas q10-15 partout
+ * (éviter le max(start) sur les fenêtres qui se chevauchent).
+ */
+const FINAL_ANSWER_CLIP_BY_START = {
+  6: final_answer_q6_11,
+  7: final_answer_q7_12,
+  8: final_answer_q8_13,
+  9: final_answer_q9_14,
+  10: final_answer_q10_15,
+};
+
 const FINAL_ANSWER_BY_LEVEL = (() => {
-  const clips = [
-    { start: 6, end: 11, src: final_answer_q6_11 },
-    { start: 7, end: 12, src: final_answer_q7_12 },
-    { start: 8, end: 13, src: final_answer_q8_13 },
-    { start: 9, end: 14, src: final_answer_q9_14 },
-    { start: 10, end: 15, src: final_answer_q10_15 },
-  ];
   const map = {};
   for (let level = 6; level <= 15; level += 1) {
-    let best = null;
-    let bestStart = -1;
-    clips.forEach(({ start, end, src }) => {
-      if (level >= start && level <= end && start > bestStart) {
-        bestStart = start;
-        best = src;
-      }
-    });
-    map[level] = best;
+    const startKey = level <= 10 ? level : level - 5;
+    map[level] = FINAL_ANSWER_CLIP_BY_START[startKey];
   }
   return map;
 })();
-
-/** Si la duree du fichier depasse ce seuil (secondes), on resout la promesse a ce moment (win-q1-5 / lose uniquement). */
-const OUTCOME_STINGER_CAP_SEC = 6;
 
 const LEVEL_SOUNDS = {
   1: { letsPlay: null, bed: bed_tier1, final: null, win: win_q1_5, lose: lose_q1_5 },
@@ -115,6 +111,7 @@ const SFX = {
   askAudience: ask_audience_sfx,
   timeUp: time_up,
   goodbye,
+  startGame: start_game,
 };
 
 class SoundManager {
@@ -173,10 +170,20 @@ class SoundManager {
     this.oneshots.clear();
   }
 
+  /** Arrête les one-shots actifs et remet à zéro toutes les pistes du cache (même hors lecture). */
+  _hushAllOneShotPlayers() {
+    this._stopAllOneshots();
+    this.oneShotCache.forEach((audio) => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (_) { /* ignore */ }
+    });
+  }
+
   /**
-   * Stinger : promesse resolue a la fin du fichier ou sur erreur.
-   * outcomeCapSec : si la duree metadata est strictement superieure a ce seuil,
-   * la lecture est arretee et la promesse resolue a outcomeCapSec secondes.
+   * One-shot : promesse résolue à la fin du fichier ou sur erreur.
+   * outcomeCapSec : optionnel, coupe la lecture après N s si la piste est plus longue.
    */
   _playOnce(src, { volume, stopOthers = false, outcomeCapSec = null } = {}) {
     return new Promise((resolve) => {
@@ -259,13 +266,18 @@ class SoundManager {
     }
   }
 
+  /** Coupe les one-shots en cours (ex. jingle / « bed » de bonne réponse) sans toucher au bed de question. */
+  stopActiveStingers() {
+    this._stopAllOneshots();
+  }
+
   /**
    * Q6+ : clic « question suivante » — démarre le bed de la question cible,
    * puis coupe net tout stinger encore en lecture (win long, let’s play, etc.).
    */
   startQuestionBedAfterTransition(level) {
     this.playBed(level);
-    this._stopAllOneshots();
+    this._hushAllOneShotPlayers();
   }
 
   playLetsPlay(level) {
@@ -283,38 +295,39 @@ class SoundManager {
   playCorrect(level) {
     if (level >= 6) this.stopBed();
     const conf = LEVEL_SOUNDS[level];
-    const winSrc = conf?.win;
-    const useCap = winSrc === win_q1_5;
-    return this._playOnce(winSrc, {
-      stopOthers: true,
-      outcomeCapSec: useCap ? OUTCOME_STINGER_CAP_SEC : null,
-    });
+    return this._playOnce(conf?.win, { stopOthers: true });
   }
 
   playWrong(level) {
     this.stopBed();
     const conf = LEVEL_SOUNDS[level];
-    return this._playOnce(conf?.lose, {
-      stopOthers: true,
-      outcomeCapSec: OUTCOME_STINGER_CAP_SEC,
-    });
+    return this._playOnce(conf?.lose, { stopOthers: true });
+  }
+
+  /** Intro « pour 200 € » (VO start-game). */
+  playStartGame() {
+    return this._playOnce(SFX.startGame, { stopOthers: true });
   }
 
   playFiftyFifty()   { return this._playOnce(SFX.fiftyFifty); }
   playPhoneFriend()  { return this._playOnce(SFX.phoneFriend); }
-  stopPhoneFriend()  { this._stopAllOneshots(); }
+  stopPhoneFriend()  { this._hushAllOneShotPlayers(); }
   playAskAudience()  { return this._playOnce(SFX.askAudience); }
-  stopAskAudience()  { this._stopAllOneshots(); }
+  stopAskAudience()  { this._hushAllOneShotPlayers(); }
   playTimeUp()       { this.stopBed(); return this._playOnce(SFX.timeUp, { stopOthers: true }); }
   playGoodbye()      { return this._playOnce(SFX.goodbye); }
 
-  stopBackground()      { this.stopBed(); }
+  /** Coupe VO / stingers (y compris cache), puis bed du niveau (`playBed` arrête déjà l’ancien bed). */
+  silenceAllVoThenPlayBed(level) {
+    this._hushAllOneShotPlayers();
+    this.playBed(level);
+  }
 
   setMuted(muted) {
     this.isMuted = muted;
     if (muted) {
       this.stopBed();
-      this._stopAllOneshots();
+      this._hushAllOneShotPlayers();
     }
   }
 
