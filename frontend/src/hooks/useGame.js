@@ -22,6 +22,28 @@ import { sleep, waitForSound } from '../game/gameAudio';
 import { pickTwoWrongAnswersToEliminate } from '../game/jokerUtils';
 import { useGameTimer } from './useGameTimer';
 
+const GAME_MASTER_VOLUME_KEY = 'gameMasterVolume';
+
+function readStoredMasterVolume() {
+  try {
+    const raw = localStorage.getItem(GAME_MASTER_VOLUME_KEY);
+    if (raw == null) return 0.7;
+    const n = JSON.parse(raw);
+    if (typeof n === 'number' && Number.isFinite(n)) return Math.min(1, Math.max(0, n));
+  } catch (_) {
+    /* ignore */
+  }
+  return 0.7;
+}
+
+function persistMasterVolume(v) {
+  try {
+    localStorage.setItem(GAME_MASTER_VOLUME_KEY, JSON.stringify(v));
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 export function useGame(navigate) {
   const [questions, setQuestions] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -57,7 +79,7 @@ export function useGame(navigate) {
   const audienceMessageTimeoutsRef = useRef([]);
   const [isAwaitingNextQuestionClick, setIsAwaitingNextQuestionClick] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(false);
+  const [masterVolume, setMasterVolumeState] = useState(readStoredMasterVolume);
   const [showMoneyTree, setShowMoneyTree] = useState(false);
   const [transitionLevel, setTransitionLevel] = useState(null);
 
@@ -128,6 +150,7 @@ export function useGame(navigate) {
     }
 
     soundManager.init();
+    soundManager.setVolume(readStoredMasterVolume());
     setGameState(GAME_STATES.INTRO);
     startIntroSequence();
 
@@ -398,10 +421,32 @@ export function useGame(navigate) {
     [gameState, questions.length, currentLevel, resetRoundState, setTimerPaused],
   );
 
+  const maybeResumeBedAfterUnmute = useCallback((previousVol, nextVol) => {
+    if (previousVol > 0 || nextVol <= 0) return;
+    const bedOk =
+      gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.SELECTED;
+    if (!bedOk) return;
+    if (showPhoneDialog || showAudienceDialog) return;
+    soundManager.playBed(currentLevel);
+  }, [gameState, currentLevel, showPhoneDialog, showAudienceDialog]);
+
+  const setMasterVolume = useCallback((v) => {
+    const prev = soundManager.volume;
+    soundManager.setVolume(v);
+    const next = soundManager.volume;
+    setMasterVolumeState(next);
+    persistMasterVolume(next);
+    maybeResumeBedAfterUnmute(prev, next);
+  }, [maybeResumeBedAfterUnmute]);
+
   const toggleMute = useCallback(() => {
-    const newMuted = soundManager.toggleMute();
-    setIsMuted(newMuted);
-  }, []);
+    const prev = soundManager.volume;
+    soundManager.toggleMute();
+    const next = soundManager.volume;
+    setMasterVolumeState(next);
+    persistMasterVolume(next);
+    maybeResumeBedAfterUnmute(prev, next);
+  }, [maybeResumeBedAfterUnmute]);
 
   const handleWalkAway = useCallback(() => {
     soundManager.stopBed();
@@ -448,7 +493,9 @@ export function useGame(navigate) {
     isAwaitingNextQuestionClick,
     showIntroStartButton,
     handleBeginIntroGame,
-    isMuted,
+    masterVolume,
+    setMasterVolume,
+    isMuted: masterVolume <= 0,
     showMoneyTree,
     setShowMoneyTree,
     transitionLevel,

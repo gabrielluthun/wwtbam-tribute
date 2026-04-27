@@ -247,6 +247,124 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--secondary-cyan);
 }
 
+/**
+ * Curseur volume (HUD jeu) — piste : linear-gradient sur la portion active via --vol (0–1, inline React).
+ * Les arrêts utilisent calc(var(--vol) * N%) pour que le dégradé s’étire jusqu’au niveau du curseur.
+ */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 7.5rem;
+  height: 1.35rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.volume-slider:focus {
+  outline: none;
+}
+
+.volume-slider:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.55);
+  outline-offset: 6px;
+  border-radius: 9999px;
+}
+
+.volume-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgba(185, 255, 255, 0.98) 0%,
+    rgba(0, 229, 255, 0.95) calc(var(--vol, 1) * 22%),
+    rgba(0, 165, 196, 0.94) calc(var(--vol, 1) * 52%),
+    rgba(0, 72, 88, 0.96) calc(var(--vol, 1) * 100%),
+    rgba(28, 36, 58, 0.88) calc(var(--vol, 1) * 100%),
+    rgba(10, 14, 28, 0.72) 100%
+  );
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 229, 255, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e6fbff 42%, var(--secondary-cyan) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.82);
+  box-shadow:
+    0 0 14px rgba(0, 229, 255, 0.7),
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.07);
+  box-shadow:
+    0 0 20px rgba(0, 229, 255, 0.9),
+    0 2px 10px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.volume-slider:active::-webkit-slider-thumb {
+  transform: scale(0.97);
+}
+
+/* Évite qu’un aplats Firefox sur la portion « avant curseur » masque le dégradé de la piste. */
+.volume-slider::-moz-range-progress {
+  background: transparent;
+}
+
+.volume-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgba(185, 255, 255, 0.98) 0%,
+    rgba(0, 229, 255, 0.95) calc(var(--vol, 1) * 22%),
+    rgba(0, 165, 196, 0.94) calc(var(--vol, 1) * 52%),
+    rgba(0, 72, 88, 0.96) calc(var(--vol, 1) * 100%),
+    rgba(28, 36, 58, 0.88) calc(var(--vol, 1) * 100%),
+    rgba(10, 14, 28, 0.72) 100%
+  );
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 229, 255, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 215, 0, 0.82);
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e6fbff 42%, var(--secondary-cyan) 100%);
+  box-shadow:
+    0 0 14px rgba(0, 229, 255, 0.7),
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-slider:hover::-moz-range-thumb {
+  transform: scale(1.07);
+  box-shadow:
+    0 0 20px rgba(0, 229, 255, 0.9),
+    0 2px 10px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.volume-slider:active::-moz-range-thumb {
+  transform: scale(0.97);
+}
+
 /* Safety net: hide any injected Emergent badge. */
 #emergent-badge {
   display: none !important;

@@ -120,10 +120,47 @@ class SoundManager {
     this.bedSrc = null;
     this.oneshots = new Set();
     this.oneShotCache = new Map();
-    this.isMuted = false;
+    /** Gain principal 0–1 (0 = silence, équivalent ancien « muet »). */
     this.volume = 0.7;
+    /** Dernière valeur > 0 avant passage à 0 (mute ou curseur à zéro), pour toggle mute. */
+    this._volumeBeforeMute = 0.7;
     this.bedVolume = 0.35;
     this.initialized = false;
+  }
+
+  /** @returns {boolean} */
+  get isMuted() {
+    return this.volume <= 0;
+  }
+
+  /**
+   * @param {number} v — gain 0–1
+   * @returns {number} valeur réellement appliquée
+   */
+  setVolume(v) {
+    const clamped = Math.min(1, Math.max(0, Number(v)));
+    if (!Number.isFinite(clamped)) return this.volume;
+    const prev = this.volume;
+    if (clamped === 0 && prev > 0) {
+      this._volumeBeforeMute = prev;
+    }
+    this.volume = clamped;
+    /** Ne pas arrêter le bed : le laisser tourner à gain 0 pour éviter un redémarrage au remontage du volume. */
+    this._applyVolumeToActiveOutputs();
+    return this.volume;
+  }
+
+  _applyVolumeToActiveOutputs() {
+    if (this.bed) {
+      try {
+        this.bed.volume = this.volume * this.bedVolume;
+      } catch (_) { /* ignore */ }
+    }
+    this.oneshots.forEach((audio) => {
+      try {
+        audio.volume = this.volume;
+      } catch (_) { /* ignore */ }
+    });
   }
 
   init() {
@@ -187,7 +224,7 @@ class SoundManager {
    */
   _playOnce(src, { volume, stopOthers = false, outcomeCapSec = null } = {}) {
     return new Promise((resolve) => {
-      if (!src || this.isMuted) return resolve();
+      if (!src || this.volume <= 0) return resolve();
       try {
         if (stopOthers) this._stopAllOneshots();
         let audio = this.oneShotCache.get(src);
@@ -240,7 +277,7 @@ class SoundManager {
   }
 
   playBed(level) {
-    if (this.isMuted) return;
+    if (this.volume <= 0) return;
     const conf = LEVEL_SOUNDS[level];
     if (!conf?.bed) return;
     if (this.bed && this.bedSrc === conf.bed && !this.bed.paused) return;
@@ -325,16 +362,24 @@ class SoundManager {
   }
 
   setMuted(muted) {
-    this.isMuted = muted;
     if (muted) {
-      this.stopBed();
-      this._hushAllOneShotPlayers();
+      if (this.volume > 0) this._volumeBeforeMute = this.volume;
+      this.setVolume(0);
+    } else {
+      const restore = this._volumeBeforeMute > 0 ? this._volumeBeforeMute : 0.7;
+      this.setVolume(restore);
     }
   }
 
   toggleMute() {
-    this.setMuted(!this.isMuted);
-    return this.isMuted;
+    if (this.volume > 0) {
+      this._volumeBeforeMute = this.volume;
+      this.setVolume(0);
+    } else {
+      const restore = this._volumeBeforeMute > 0 ? this._volumeBeforeMute : 0.7;
+      this.setVolume(restore);
+    }
+    return this.volume <= 0;
   }
 }
 

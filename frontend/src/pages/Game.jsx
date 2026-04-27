@@ -34,6 +34,8 @@ export const Game = () => {
     isAwaitingNextQuestionClick,
     showIntroStartButton,
     handleBeginIntroGame,
+    masterVolume,
+    setMasterVolume,
     isMuted,
     showMoneyTree,
     setShowMoneyTree,
@@ -218,16 +220,51 @@ export const Game = () => {
               >
                 <Home size={20} style={{ color: 'var(--text-primary)' }} />
               </button>
-              <button
-                className="p-2 rounded-full transition-colors"
-                style={{ background: 'var(--top-btn-bg)' }}
-                onClick={toggleMute}
-                data-testid="mute-btn"
+              <div
+                className="group flex items-center gap-0 min-w-0"
+                aria-label="Volume"
               >
-                {isMuted
-                  ? <VolumeX size={20} style={{ color: 'var(--text-primary)' }} />
-                  : <Volume2 size={20} style={{ color: 'var(--text-primary)' }} />}
-              </button>
+                <button
+                  type="button"
+                  className="p-2 rounded-full shrink-0 transition-colors"
+                  style={{ background: 'var(--top-btn-bg)' }}
+                  onClick={toggleMute}
+                  data-testid="mute-btn"
+                  aria-label={isMuted ? 'Réactiver le son' : 'Couper le son'}
+                >
+                  {isMuted
+                    ? <VolumeX size={20} style={{ color: 'var(--text-primary)' }} />
+                    : <Volume2 size={20} style={{ color: 'var(--text-primary)' }} />}
+                </button>
+                <div
+                  className={[
+                    'overflow-hidden transition-[max-width,opacity,margin] duration-200 ease-out',
+                    'max-w-0 opacity-0 mr-0 pointer-events-none',
+                    'group-hover:max-w-[7.5rem] group-hover:opacity-100 group-hover:mr-2 group-hover:pointer-events-auto',
+                    'group-focus-within:max-w-[7.5rem] group-focus-within:opacity-100 group-focus-within:mr-2 group-focus-within:pointer-events-auto',
+                    '[@media(pointer:coarse)]:max-w-[7.5rem] [@media(pointer:coarse)]:opacity-100 [@media(pointer:coarse)]:mr-2 [@media(pointer:coarse)]:pointer-events-auto',
+                  ].join(' ')}
+                >
+                  <label className="flex items-center min-w-0">
+                    <span className="sr-only">Volume</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={Math.round(masterVolume * 100)}
+                      onChange={(e) => setMasterVolume(Number(e.target.value) / 100)}
+                      className="volume-slider shrink-0 min-w-0"
+                      style={{ '--vol': masterVolume }}
+                      data-testid="volume-slider"
+                      aria-label="Volume du jeu"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round(masterVolume * 100)}
+                    />
+                  </label>
+                </div>
+              </div>
               {timerEnabled && <TimerDisplay timeRemaining={timeRemaining} />}
             </div>
 
