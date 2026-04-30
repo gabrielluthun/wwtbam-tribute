@@ -344,7 +344,7 @@ export function useGame(navigate) {
     const thinkingDurationMs = Math.floor(Math.random() * 8000) + 13000;
     phoneResponseTimeoutRef.current = setTimeout(() => {
       const correctAnswer = currentQuestion.answers[currentQuestion.correctIndex];
-      const response = getPhoneResponse(correctAnswer, currentQuestion.answers);
+      const response = getPhoneResponse(correctAnswer, currentQuestion.answers, currentLevel);
       setPhoneResponse({ ...response, isPending: false });
       phoneResponseTimeoutRef.current = null;
     }, thinkingDurationMs);
@@ -372,7 +372,11 @@ export function useGame(navigate) {
     ];
 
     audienceResponseTimeoutRef.current = setTimeout(() => {
-      const results = generateAudienceResults(currentQuestion.correctIndex, eliminatedAnswers);
+      const results = generateAudienceResults(
+        currentQuestion.correctIndex,
+        eliminatedAnswers,
+        currentQuestion.question,
+      );
       setAudienceResults(results);
       setAudienceMessage('Résultats du public');
       audienceMessageTimeoutsRef.current = [];

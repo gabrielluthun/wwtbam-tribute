@@ -87,11 +87,7 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
           </div>
           <div>
             <h3 className="text-white font-bold font-['Chivo']">Appel à un ami</h3>
-            {typeof response?.confidence === 'number' ? (
-              <p className="text-[#B0B0C0] text-sm">Confiance: {response.confidence}%</p>
-            ) : (
-              <p className="text-[#B0B0C0] text-sm">En cours...</p>
-            )}
+            <p className="text-[#B0B0C0] text-sm">{response?.isPending ? 'En cours...' : 'Conseil reçu'}</p>
           </div>
         </div>
         
