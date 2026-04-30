@@ -348,7 +348,7 @@ export function useGame(navigate) {
       setPhoneResponse({ ...response, isPending: false });
       phoneResponseTimeoutRef.current = null;
     }, thinkingDurationMs);
-  }, [usedJokers.phone, gameState, currentQuestion, setTimerPaused]);
+  }, [usedJokers.phone, gameState, currentQuestion, currentLevel, setTimerPaused]);
 
   // Audience Dialog
   const handleAskAudience = useCallback(() => {
