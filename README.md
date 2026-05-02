@@ -35,8 +35,9 @@ En partie, l’écran est organisé ainsi :
 ## Règles en bref
 
 - Une **mauvaise réponse** termine la manche ; le gain retenu correspond au **dernier palier de sécurité** déjà franchi le cas échéant (sinon 0 €), comme dans le jeu télévisé.
-- Vous pouvez **vous arrêter** à tout moment et repartir avec le montant du dernier palier que vous avez **validé** en répondant correctement.
-- En mode **chrono**, chaque question est soumise au temps imparti.
+- Vous pouvez **vous arrêter** à tout moment et repartir avec le montant de la dernière question que vous avez **validé** en répondant correctement.
+- En mode **chrono**, chaque question est soumise au temps imparti.  
+Si le temps est écoulé, la réponse est considérée comme incorrecte, et vous repartez avec le montant du **dernier palier de sécurité** franchi.
 
 ---
 
