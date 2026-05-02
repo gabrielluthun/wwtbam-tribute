@@ -14,7 +14,8 @@ En partie, l’écran est organisé ainsi :
 - **Pied de page** : raccourcis pour quitter ou afficher la pyramide selon la taille d’écran.
 
 **Exemple de question :**
-![Question](/docs/screenshots/ecran-question.png)
+
+![Disposition typique : question, réponses A–D et pyramide des gains](./docs/screenshots/ecran-question.jpg)
 
 ---
 
