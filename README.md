@@ -1,6 +1,23 @@
-# QVGDM — Qui Veut Gagner Des Millions ?
+# QVGDM — Qui veut gagner des millions ?
 
-Application web de quiz inspirée du jeu télévisé **Qui veut gagner des millions ?**. Vous composez **15 questions** à quatre réponses, puis vous jouez pour gravir les **15 paliers** jusqu’au gain maximal.
+Application web de quiz inspirée du jeu télévisé **Qui veut gagner des millions ?**. Vous préparez **15 questions** à quatre réponses, puis vous montez les **15 paliers** jusqu’au gain maximal — en solo ou à deux en local.
+
+Projet **ludique et non officiel**, pensé pour les soirées entre amis, en famille ou en classe.
+
+---
+
+## Sommaire
+
+- [Aperçu de l’interface](#aperçu-de-linterface)
+- [Fonctionnalités](#fonctionnalités)
+- [Règles et paliers](#règles-et-paliers)
+- [Parcours habituel](#parcours-habituel)
+- [Prérequis](#prérequis)
+- [Installation et lancement (frontend)](#installation-et-lancement-frontend)
+- [Scripts npm / yarn](#scripts-npm--yarn)
+- [Backend optionnel (FastAPI)](#backend-optionnel-fastapi)
+- [Technologies](#technologies)
+- [Structure du dépôt](#structure-du-dépôt)
 
 ---
 
@@ -8,14 +25,14 @@ Application web de quiz inspirée du jeu télévisé **Qui veut gagner des milli
 
 En partie, l’écran est organisé ainsi :
 
-- **En-tête** : retour et volume à gauche ; au centre, les **trois jokers** (50:50, appel à un ami, avis du public) ; à droite, le bouton pour **partir avec les gains** affichés.
-- **Zone centrale** : indicatif **QUESTION n** et **montant du palier** au-dessus d’un grand bandeau pour l’intitulé ; en dessous, les **quatre réponses** en grille 2×2 (pastilles A à D).
-- **Colonne « Gains »** à droite : pyramide des **15 niveaux** avec les montants ; le palier courant est mis en évidence ; certains niveaux correspondent à des **seuils de sécurité** (repères visuels sur la liste).
-- **Pied de page** : raccourcis pour quitter ou afficher la pyramide selon la taille d’écran.
+- **En-tête** : retour et volume à gauche ; au centre, les **trois jokers** (50:50, appel à un ami, avis du public) ; à droite, **partir avec les gains** affichés.
+- **Zone centrale** : **QUESTION n** et **montant du palier** au-dessus du libellé ; en dessous, les **quatre réponses** en grille 2×2 (A à D).
+- **Colonne « Gains »** : pyramide des **15 niveaux** ; le palier courant est mis en évidence ; **seuils de sécurité** repérés sur la liste.
+- **Pied de page** : raccourcis selon la taille d’écran (quitter, pyramide, etc.).
 
-**Exemple de question :**
+**Exemple d’écran de jeu :**
 
-![Disposition typique : question, réponses A–D et pyramide des gains](./docs/screenshots/ecran-question.jpg)
+![Question, réponses A–D et pyramide des gains](./docs/screenshots/ecran-question.jpg)
 
 ---
 
@@ -24,34 +41,62 @@ En partie, l’écran est organisé ainsi :
 | Domaine | Détail |
 |--------|--------|
 | **Modes** | Solo ou **multijoueur local** (2 joueurs, tours alternés) |
-| **Questions** | 15 questions, 4 propositions, une seule bonne réponse par question |
+| **Questions** | 15 questions, 4 propositions (A–D), une bonne réponse par question |
+| **Bibliothèque de thèmes** | Thèmes prédéfinis (culture, sport, cinéma, etc.), chacun avec 15 questions du plus facile au plus difficile ; possibilité de **créer des thèmes personnalisés** (stockage **local** dans le navigateur) |
+| **Ordre des questions** | Option pour **mélanger** l’ordre des 15 questions (Fisher-Yates) ; les montants des paliers restent alignés sur la progression (1 → 15) |
 | **Jokers** | 50:50, téléphone (conseil simulé), avis du public (pourcentages) — **une utilisation chacun** par partie |
-| **Timer** | Optionnel, pour limiter le temps par question |
-| **Données** | Import / export des quiz en **JSON**, **thèmes** réutilisables |
-| **Ambiance** | Sons par palier, interface sombre type plateau TV |
+| **Timer** | Optionnel, durée configurable (**10 à 120** secondes, défaut 30) ; le temps peut se mettre en pause lors de certains écrans (jokers, validation) |
+| **Données** | **Import** et **export** des quiz en **JSON** (métadonnées + réglages utiles au partage) |
+| **Ambiance** | Sons par événement (suspense, bonne/mauvaise réponse, palier, million, etc.), interface sombre type plateau TV |
 
 ---
 
-## Règles en bref
+## Règles et paliers
 
-- Une **mauvaise réponse** termine la manche ; le gain retenu correspond au **dernier palier de sécurité** déjà franchi le cas échéant (sinon 0 €), comme dans le jeu télévisé.
-- Vous pouvez **vous arrêter** à tout moment et repartir avec le montant de la dernière question que vous avez **validé** en répondant correctement.
-- En mode **chrono**, chaque question est soumise au temps imparti.  
-Si le temps est écoulé, la réponse est considérée comme incorrecte, et vous repartez avec le montant du **dernier palier de sécurité** franchi.
+- Une **mauvaise réponse** termine la manche. Le gain retenu est celui du **dernier palier de sécurité** déjà **validé** en répondant correctement à la question correspondante — sinon **0 €**.
+- Vous pouvez **vous arrêter** à tout moment et repartir avec le montant affiché pour la dernière question **déjà validée**.
+- En mode **chrono**, si le temps est écoulé avant validation, la réponse est traitée comme une erreur ; le gain suit la même logique de **paliers de sécurité**.
+
+**Montants des 15 paliers** (tels qu’implémentés dans l’app) :
+
+| # | Montant | Seuil de sécurité |
+|---|---------|-------------------|
+| 1 | 200 € | — |
+| 2 | 300 € | — |
+| 3 | 500 € | — |
+| 4 | 800 € | — |
+| 5 | 1 500 € | Oui |
+| 6 | 3 000 € | — |
+| 7 | 6 000 € | — |
+| 8 | 12 000 € | — |
+| 9 | 24 000 € | — |
+| 10 | 48 000 € | Oui |
+| 11 | 72 000 € | — |
+| 12 | 100 000 € | — |
+| 13 | 150 000 € | — |
+| 14 | 300 000 € | — |
+| 15 | 1 000 000 € | Oui (sommet) |
 
 ---
 
 ## Parcours habituel
 
-1. **Accueil** — Choisir solo ou multijoueur et entrer les prénoms si besoin.
-2. **Création du quiz** — Rédiger les 15 questions, cocher la bonne réponse, naviguer entre les questions ; importer un fichier JSON si vous en avez un.
-3. **Partie** — Lancer le jeu, utiliser les jokers au bon moment, confirmer la réponse (« dernier mot »), suivre la progression sur la pyramide.
+1. **Accueil** — Choisir solo ou multijoueur et saisir les prénoms si besoin.
+2. **Création du quiz *(optionnel)*** — Rédiger les 15 questions, cocher la bonne réponse, naviguer entre les questions **OU** choisir un **thème** prédéfini ou **importer** un JSON ; régler **timer**, **mélange**, etc.
+3. **Partie** — Lancer le jeu, utiliser les jokers, confirmer avec « C’est mon dernier mot ! », suivre la pyramide ; **exporter** le quiz pour le réutiliser plus tard.
 
 ---
 
-## Lancer l’application en local
+## Prérequis
 
-Le jeu s’exécute dans le navigateur via le frontend React.
+- **Node.js** récent (compatible avec **React 19** et Create React App via Craco ; en pratique, une **LTS** courante type 18.x ou 20.x est appropriée).
+- Un navigateur à jour.
+
+---
+
+## Installation et lancement (frontend)
+
+Le jeu tourne entièrement dans le navigateur ; **aucun serveur n’est obligatoire** pour jouer.
 
 ```bash
 cd frontend
@@ -59,19 +104,48 @@ npm install
 npm start
 ```
 
-Ouvrez l’URL indiquée dans le terminal (souvent `http://localhost:3000`).
+Le dépôt déclare aussi **Yarn 1** comme gestionnaire de paquets (`packageManager` dans `package.json`) ; vous pouvez utiliser à la place :
 
-Le dépôt contient aussi un backend **FastAPI** (ex. pour des extensions avec base de données) ; **le flux de jeu actuel ne dépend pas de ce serveur** pour fonctionner en local.
+```bash
+cd frontend
+yarn install
+yarn start
+```
+
+L’URL locale est en général **http://localhost:3000** (voir la sortie du terminal).
 
 ---
 
-## Technique (résumé)
+## Scripts npm / yarn
 
-- **Frontend** : React, React Router, Tailwind CSS, Framer Motion (animations).
-- **Contenu** : questions et paliers gérés côté client (stockage local / import-export selon les écrans).
+| Commande | Rôle |
+|----------|------|
+| `npm start` / `yarn start` | Serveur de développement (Craco) |
+| `npm run build` / `yarn build` | Build de production dans `frontend/build` |
+| `npm test` / `yarn test` | Tests interactifs (CRA / Craco) |
 
 ---
 
-## Remarque
+## Technologies
 
-Projet **ludique et non officiel**, hommage au format télévisé — destiné aux parties entre amis, en famille ou en classe.
+- **Frontend** : React 19, React Router 7, **Tailwind CSS** 3, **Framer Motion**, **Craco** au-dessus de Create React App, Radix UI (switch), Lucide (icônes).
+- **Données de jeu** : état et quiz gérés **côté client** (formulaire, thèmes, import/export JSON).
+
+---
+
+## Structure du dépôt
+
+```
+QVGDM/
+├── frontend/          # Application React (écran principal du projet)
+├── backend/           # API FastAPI + MongoDB (optionnelle pour le jeu actuel)
+├── docs/screenshots/  # Captures pour la documentation
+├── memory/PRD.md      # Notes produit / historique de fonctionnalités
+└── tests/             # Paquet Python minimal (`__init__.py` seul pour l’instant)
+```
+
+---
+
+## Légal / mention
+
+Ce dépôt est un **hommage** au format télévisé ; il n’est **pas** affilié aux ayants droit de l’émission originale.
