@@ -323,6 +323,9 @@ export const Game = () => {
                 onClick={handleSelectAnswer}
                 disabled={gameState !== GAME_STATES.PLAYING && gameState !== GAME_STATES.SELECTED}
                 audiencePercent={audienceResults ? audienceResults[index] : undefined}
+                wrongOutcomeReveal={
+                  answerStates[index] === 'correct' && answerStates.some((s) => s === 'wrong')
+                }
               />
             ))}
           </div>

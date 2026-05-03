@@ -138,6 +138,32 @@ h1, h2, h3, h4, h5, h6 {
   animation: flash-correct 0.2s ease-in-out 3;
 }
 
+/*
+ * Bonne réponse révélée après une erreur : 2 états (0 % = bouton réponse par défaut, 100 % = #00D253).
+ * steps(2) : moitié du cycle sur 0 %, moitié sur 100 % → 0,32 s par état si durée = 0,64 s.
+ * 6 itérations → 6 × (base + vert), puis forwards sur le dernier état (vert).
+ */
+@keyframes blink-correct-wrong-outcome {
+  0% {
+    background: linear-gradient(180deg, rgba(26, 26, 58, 0.9) 0%, rgba(11, 11, 26, 0.95) 100%);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: none;
+    color: var(--text-primary);
+  }
+
+  100% {
+    background: #00d253;
+    border-color: #00d253;
+    box-shadow: 0 0 20px rgba(0, 210, 83, 0.55), 0 0 40px rgba(0, 210, 83, 0.35);
+    color: #000;
+  }
+}
+
+.animate-blink-correct-wrong-outcome {
+  transition: none;
+  animation: blink-correct-wrong-outcome 0.32s steps(2, jump-none) 6 forwards;
+}
+
 /* Shake animation for wrong answer */
 @keyframes shake {
   0%, 100% {

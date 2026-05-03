@@ -7,15 +7,21 @@ export const AnswerButton = ({
   state, // 'default' | 'selected' | 'correct' | 'wrong' | 'eliminated'
   onClick, 
   disabled,
-  audiencePercent 
+  audiencePercent,
+  /** Révélation après erreur joueur : clignotement vert dédié (sans flash « bonne réponse » classique). */
+  wrongOutcomeReveal = false,
 }) => {
   const letter = ANSWER_LETTERS[index];
-  
+  const wrongRevealBlink = wrongOutcomeReveal && state === 'correct';
+
   const getStateClasses = () => {
     switch (state) {
       case 'selected':
         return 'answer-btn selected animate-pulse-gold';
       case 'correct':
+        if (wrongOutcomeReveal) {
+          return 'answer-btn animate-blink-correct-wrong-outcome';
+        }
         return 'answer-btn correct glow-green animate-flash-correct';
       case 'wrong':
         return 'answer-btn wrong glow-red animate-shake';
@@ -41,11 +47,13 @@ export const AnswerButton = ({
       <div className="letter-badge flex-shrink-0">
         {letter}
       </div>
-      <span className="text-white font-medium text-base sm:text-lg flex-1 min-w-0 break-words">
+      <span
+        className={`font-medium text-base sm:text-lg flex-1 min-w-0 break-words ${wrongRevealBlink ? 'text-inherit' : 'text-white'}`}
+      >
         {answer || '...'}
       </span>
       {audiencePercent !== undefined && (
-        <span className="text-cyan-400 font-bold text-sm">
+        <span className={`font-bold text-sm ${wrongRevealBlink ? 'text-inherit' : 'text-cyan-400'}`}>
           {audiencePercent}%
         </span>
       )}
