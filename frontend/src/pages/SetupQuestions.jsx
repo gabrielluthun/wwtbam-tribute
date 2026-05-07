@@ -342,8 +342,8 @@ export const SetupQuestions = () => {
                       </span>
                       <span>
                         {status === 'complete' && <Check size={14} className="text-green-500" />}
-                        {status === 'partial' && <AlertCircle size={14} className="text-yellow-500" />}
-                        {status === 'empty' && <span className="w-3 h-3 rounded-full bg-gray-600 block" />}
+                        {status === 'partial' && <AlertCircle size={14} className="text-yellow-400" />}
+                        {status === 'empty' && <span className="w-3 h-3 rounded-full bg-white/20 block" />}
                       </span>
                     </button>
                   );
