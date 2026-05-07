@@ -47,8 +47,8 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
                 type="button"
                 data-testid={`money-level-${level.level}`}
                 className={`relative flex items-center justify-between py-2 px-3 rounded 
-                  ${isCurrent ? 'bg-[#FFD700]/20' : ''}
-                  ${isCheckpoint ? 'border-l-2 border-[#00E5FF]' : ''}
+                  ${isCurrent ? 'bg-[#FFD700]/20 money-item-active' : ''}
+                  ${isCheckpoint ? 'border-l-2 border-[#00E5FF] money-item-checkpoint' : ''}
                   ${onSelectLevel ? 'w-full text-left cursor-pointer hover:bg-white/10' : 'w-full'}
                 `}
                 onClick={() => onSelectLevel?.(level.level)}
