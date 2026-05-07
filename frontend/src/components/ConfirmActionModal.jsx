@@ -31,7 +31,7 @@ export const ConfirmActionModal = ({
             <button className="btn-secondary flex-1" onClick={onCancel} data-testid="confirm-cancel-btn">
               Annuler
             </button>
-            <button className="btn-primary flex-1" onClick={onConfirm} data-testid="confirm-accept-btn">
+            <button className="btn-danger flex-1" onClick={onConfirm} data-testid="confirm-accept-btn">
               {confirmLabel}
             </button>
           </div>
