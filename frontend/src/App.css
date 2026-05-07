@@ -29,6 +29,11 @@
   transform: scale(1.02);
 }
 
+.answer-btn:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 3px;
+}
+
 .answer-btn.selected {
   background: linear-gradient(180deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 100%);
   border-color: #FFD700;
@@ -160,6 +165,11 @@
   box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
 }
 
+.btn-primary:focus-visible {
+  outline: 3px solid #00E5FF;
+  outline-offset: 3px;
+}
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -182,6 +192,11 @@
 .btn-secondary:hover {
   background: rgba(0, 229, 255, 0.1);
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+}
+
+.btn-secondary:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 3px;
 }
 
 button {

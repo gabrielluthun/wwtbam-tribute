@@ -241,6 +241,11 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.1);
 }
 
+.joker-btn:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 4px;
+}
+
 .joker-btn.used {
   opacity: 0.4;
   cursor: not-allowed;
