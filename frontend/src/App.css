@@ -74,16 +74,28 @@
   border-left: 1px solid rgba(0, 229, 255, 0.2);
 }
 
-/* Progress indicator */
+/* Niveau actif : glow extérieur + bordure interne pour trancher dans la liste */
+.money-item-active {
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.22), inset 0 0 0 1px rgba(255, 215, 0, 0.45);
+}
+
+/* Palier garanti : fond cyan très léger pour l'identifier au premier coup d'œil */
+.money-item-checkpoint {
+  background: rgba(0, 229, 255, 0.07);
+}
+
+/* Progress indicator — barre verticale gauche, toujours dans les limites du bouton */
 .progress-indicator {
   position: absolute;
-  left: -20px;
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-left: 15px solid #FFD700;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  height: auto;
+  border: none;
+  background: #FFD700;
+  border-radius: 0 2px 2px 0;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
 }
 
 /* Home page styles */
@@ -123,6 +135,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.theme-card:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 3px;
+}
+
 /* Input styling */
 .game-input {
   background: rgba(11, 11, 26, 0.8);
@@ -135,10 +152,13 @@
   transition: all 0.3s ease;
 }
 
-.game-input:focus {
+.game-input:focus,
+.game-input:focus-visible {
   outline: none;
   border-color: #FFD700;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  /* Neutralise l'anneau Shadcn (focus-visible:ring-1) pour éviter le double effet */
+  --tw-ring-shadow: 0 0 0 0px transparent;
 }
 
 .game-input::placeholder {
@@ -176,6 +196,13 @@
   transform: none;
 }
 
+/* Variante compacte pour les contextes text-sm (modales, panneaux) */
+.btn-primary.text-sm,
+.btn-secondary.text-sm,
+.btn-danger.text-sm {
+  padding: 0.5rem 1rem;
+}
+
 /* Secondary button */
 .btn-secondary {
   background: transparent;
@@ -194,8 +221,46 @@
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
 
+.btn-secondary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .btn-secondary:focus-visible {
   outline: 3px solid #FFD700;
+  outline-offset: 3px;
+}
+
+/* Danger button — actions irréversibles (quitter, partir) */
+.btn-danger {
+  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+  color: #fff;
+  font-weight: 700;
+  font-family: 'Chivo', sans-serif;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.btn-danger:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(211, 47, 47, 0.5);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-danger:focus-visible {
+  outline: 3px solid #FF5252;
   outline-offset: 3px;
 }
 
@@ -301,6 +366,12 @@ button {
   .answer-btn.hexagon-btn {
     clip-path: none;
     border-radius: 10px;
+  }
+
+  /* Le badge lettre redevient rond pour rester cohérent avec le bouton arrondi */
+  .answer-btn.hexagon-btn .letter-badge {
+    clip-path: none;
+    border-radius: 50%;
   }
 
   .answer-btn.selected {
