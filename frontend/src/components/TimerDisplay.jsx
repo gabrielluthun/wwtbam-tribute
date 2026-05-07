@@ -7,7 +7,7 @@ export const TimerDisplay = ({ timeRemaining }) => {
 
   return (
     <motion.div
-      className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors duration-300 ${
         isCritical ? 'bg-red-500/30 text-red-400' :
         isWarning ? 'bg-yellow-500/30 text-yellow-400' :
         'bg-white/10 text-white'
