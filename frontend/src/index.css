@@ -214,8 +214,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .money-level.passed {
-  color: var(--text-secondary);
-  opacity: 0.5;
+  color: #6E6E8A;
 }
 
 .money-level.checkpoint {
@@ -399,4 +398,24 @@ h1, h2, h3, h4, h5, h6 {
 /* Safety net: hide any injected Emergent badge. */
 #emergent-badge {
   display: none !important;
+}
+
+/* Respect du choix système "réduire les animations" */
+@media (prefers-reduced-motion: reduce) {
+  /* Animations CSS en boucle */
+  .animate-pulse-gold,
+  .animate-flash-correct,
+  .animate-shake,
+  .animate-blink-correct-wrong-outcome {
+    animation: none;
+  }
+
+  /* Transitions globales raccourcies */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
