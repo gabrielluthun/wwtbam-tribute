@@ -110,7 +110,11 @@ export const Game = () => {
         <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
 
         <motion.div
-          className="relative z-10 glass rounded-2xl p-5 sm:p-8 max-w-lg w-full min-w-0 max-h-[min(90dvh,90vh)] overflow-y-auto text-center"
+          className={`relative z-10 glass rounded-2xl p-5 sm:p-8 max-w-lg w-full min-w-0 max-h-[min(90dvh,90vh)] overflow-y-auto text-center border ${
+            gameState === GAME_STATES.MILLION || gameState === GAME_STATES.WON
+              ? 'border-green-500/40 shadow-[inset_0_0_60px_rgba(46,125,50,0.12)]'
+              : 'border-red-500/30 shadow-[inset_0_0_60px_rgba(211,47,47,0.10)]'
+          }`}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           data-testid="game-over-screen"
@@ -216,6 +220,7 @@ export const Game = () => {
                 className="p-2 rounded-full transition-colors"
                 style={{ background: 'var(--top-btn-bg)' }}
                 onClick={openHomeConfirm}
+                aria-label="Retour à l'accueil"
                 data-testid="back-home-btn"
               >
                 <Home size={20} style={{ color: 'var(--text-primary)' }} />
@@ -406,7 +411,7 @@ export const Game = () => {
           disabled={gameState !== GAME_STATES.PLAYING}
           data-testid="walk-away-btn-mobile"
         >
-          Partir ({currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'})
+          Partir avec {currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'}
         </button>
         <button
           className="btn-secondary text-sm"
