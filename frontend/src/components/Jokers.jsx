@@ -35,26 +35,30 @@ export const Jokers = ({
   return (
     <div className="flex gap-4 justify-center" data-testid="jokers-container">
       {jokers.map((joker, idx) => (
-        <motion.button
-          key={joker.id}
-          type="button"
-          data-testid={`joker-${joker.id}`}
-          className={`joker-btn ${joker.used ? 'used' : ''}`}
-          onClick={() => !joker.used && !disabled && joker.onClick()}
-          disabled={joker.used || disabled}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          whileHover={!joker.used && !disabled ? { scale: 1.1 } : {}}
-          whileTap={!joker.used && !disabled ? { scale: 0.95 } : {}}
-          title={joker.label}
-          aria-label={`${joker.label}${joker.used ? ' (utilisé)' : ''}`}
-        >
-          <joker.icon 
-            size={24} 
-            className={joker.used ? 'text-gray-500' : 'text-[#00E5FF]'} 
-          />
-        </motion.button>
+        <div key={joker.id} className="flex flex-col items-center gap-1">
+          <motion.button
+            type="button"
+            data-testid={`joker-${joker.id}`}
+            className={`joker-btn ${joker.used ? 'used' : ''}`}
+            onClick={() => !joker.used && !disabled && joker.onClick()}
+            disabled={joker.used || disabled}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            whileHover={!joker.used && !disabled ? { scale: 1.1 } : {}}
+            whileTap={!joker.used && !disabled ? { scale: 0.95 } : {}}
+            title={joker.label}
+            aria-label={`${joker.label}${joker.used ? ' (utilisé)' : ''}`}
+          >
+            <joker.icon 
+              size={24} 
+              className={joker.used ? 'text-gray-500' : 'text-[#00E5FF]'} 
+            />
+          </motion.button>
+          <span className={`text-xs font-semibold tracking-wide ${joker.used ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
+            {joker.label}
+          </span>
+        </div>
       ))}
     </div>
   );
@@ -97,7 +101,7 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
         
         <button
           type="button"
-          className={`btn-secondary w-full ${response?.isPending ? 'opacity-10 cursor-not-allowed' : ''}`}
+          className={`btn-secondary w-full ${response?.isPending ? 'opacity-40 cursor-not-allowed' : ''}`}
           disabled={response?.isPending}
           onClick={onClose}
           data-testid="close-phone-dialog"
@@ -147,7 +151,7 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
                 <motion.div
                   className="w-12 audience-bar"
                   initial={{ height: 0 }}
-                  animate={{ height: `${percent * 1.5}px` }}
+                  animate={{ height: `${percent * 1.92}px` }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   data-testid={`audience-bar-${letters[idx].toLowerCase()}`}
                 />
