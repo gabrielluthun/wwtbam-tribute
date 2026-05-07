@@ -129,8 +129,9 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
               </p>
             </div>
             <button
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#FFD700] focus-visible:outline-offset-2"
               onClick={onClose}
+              aria-label="Fermer"
               data-testid="close-theme-selector"
             >
               <X size={24} className="text-white" />
@@ -173,24 +174,24 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                 >
                   <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                     <button
-                      className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors"
+                      className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#FFD700] focus-visible:outline-offset-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         openEditTheme(theme);
                       }}
-                      title="Modifier le thème"
+                      aria-label={`Modifier le thème ${theme.name}`}
                       data-testid={`edit-theme-${theme.id}`}
                     >
                       <Pencil size={14} className="text-white" />
                     </button>
                     {theme.isCustom && (
                       <button
-                        className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors"
+                        className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteTheme(theme);
                         }}
-                        title="Supprimer le thème"
+                        aria-label={`Supprimer le thème ${theme.name}`}
                         data-testid={`delete-theme-${theme.id}`}
                       >
                         <Trash2 size={14} className="text-white" />
@@ -278,7 +279,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                 </p>
               )}
               <div className="mt-4 flex items-center justify-end gap-3 flex-wrap">
-                <button className="btn-primary text-sm" onClick={handleEditQuestions} data-testid="edit-theme-questions">
+                <button className="btn-secondary text-sm" onClick={handleEditQuestions} data-testid="edit-theme-questions">
                   Modifier les questions
                 </button>
                 <button className="btn-secondary text-sm" onClick={closeEditTheme}>
@@ -375,7 +376,7 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
                     Annuler
                   </button>
                   <button
-                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 hover:shadow-[0_0_24px_rgba(255,80,120,0.45)]"
+                    className="btn-danger text-sm"
                     onClick={confirmDeleteTheme}
                     data-testid="delete-theme-confirm"
                   >
