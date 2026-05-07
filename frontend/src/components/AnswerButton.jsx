@@ -53,7 +53,7 @@ export const AnswerButton = ({
         {answer || '...'}
       </span>
       {audiencePercent !== undefined && (
-        <span className={`font-bold text-sm ${wrongRevealBlink ? 'text-inherit' : 'text-cyan-400'}`}>
+        <span className={`font-bold text-base ${wrongRevealBlink ? 'text-inherit' : 'text-cyan-400'}`}>
           {audiencePercent}%
         </span>
       )}
