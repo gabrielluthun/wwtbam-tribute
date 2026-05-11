@@ -114,6 +114,196 @@
   filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.3));
 }
 
+.mode-intro {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #d8d8e8;
+  margin-bottom: 0.85rem;
+}
+
+.mode-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  text-align: left;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.mode-card:focus-visible {
+  outline: 3px solid #00e5ff;
+  outline-offset: 3px;
+}
+
+.mode-card-primary {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 160, 0, 0.14) 100%);
+  border-color: rgba(255, 215, 0, 0.55);
+}
+
+.mode-card-primary:hover {
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.32);
+}
+
+.mode-card-secondary {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.14) 0%, rgba(0, 145, 234, 0.08) 100%);
+  border-color: rgba(0, 229, 255, 0.45);
+}
+
+.mode-card-secondary:hover {
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.28);
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(11, 11, 26, 0.7);
+  color: #d8d8e8;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.mode-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #ffffff;
+  font-family: 'Chivo', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.mode-subtitle {
+  color: #d8d8e8;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.home-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.home-steps span {
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(11, 11, 26, 0.55);
+  color: #d8d8e8;
+  font-size: 0.78rem;
+}
+
+.home-help-modal {
+  width: min(760px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.28);
+  background: linear-gradient(180deg, rgba(16, 16, 36, 0.96) 0%, rgba(9, 9, 20, 0.97) 100%);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  padding: 1.1rem 1.15rem 1.2rem;
+}
+
+.home-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.home-help-header h3 {
+  color: #fff;
+  font-family: 'Chivo', sans-serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+.home-help-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #d8d8e8;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+}
+
+.home-help-close:hover {
+  color: #fff;
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
+}
+
+.home-help-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.home-help-content section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 0.8rem;
+}
+
+.home-help-content h4 {
+  margin: 0 0 0.45rem;
+  color: #00e5ff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.home-help-content p,
+.home-help-content li {
+  color: #d8d8e8;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.home-help-content ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.32rem;
+}
+
+.home-help-checkpoints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.home-help-checkpoints span {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  padding: 0.22rem 0.56rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 /* Setup page styles */
 .setup-container {
   min-height: 100vh;
@@ -383,6 +573,22 @@ button {
   .answer-btn.selected.animate-pulse-gold {
     animation: none;
     box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
+  }
+
+  .mode-card {
+    padding: 0.9rem;
+  }
+
+  .mode-title {
+    font-size: 1rem;
+  }
+
+  .home-help-content {
+    grid-template-columns: 1fr;
+  }
+
+  .home-help-modal {
+    padding: 0.95rem 0.95rem 1rem;
   }
 }
 
