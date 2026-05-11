@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { MONEY_LEVELS } from '../utils/gameData';
 
-export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
+const MoneyTreeBase = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
   return (
     <>
       {/* Mobile overlay */}
@@ -85,3 +86,10 @@ export const MoneyTree = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
     </>
   );
 };
+
+/**
+ * Mémoisation : `currentLevel` ne change qu'à la transition de question,
+ * pas à chaque tick du timer. `onClose` / `onSelectLevel` doivent être stables
+ * côté parent (useCallback).
+ */
+export const MoneyTree = memo(MoneyTreeBase);
