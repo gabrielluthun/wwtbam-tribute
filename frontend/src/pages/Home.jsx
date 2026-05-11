@@ -121,7 +121,7 @@ export const Home = () => {
             <div className="flex items-center gap-2">
               <Info size={18} className="text-[#00E5FF] flex-shrink-0" />
               <p className="text-[#D8D8E8] text-sm text-left">
-                Tout le fonctionnement détaillé est disponible ici.
+                Si c'est votre première fois, lisez ce guide pour comprendre le fonctionnement du jeu.
               </p>
             </div>
             <button
