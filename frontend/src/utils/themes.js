@@ -50,7 +50,7 @@ export const THEMES = {
       q('Quel pays a remporté la Coupe du Monde de football 2022 au Qatar ?', ['France', 'Brésil', 'Argentine', 'Maroc'], 'C'),
       q('Combien de points vaut un drop-goal au rugby à XV ?', ['2', '3', '4', '5'], 'B'),
       q('En combien d\'épreuves se dispute le décathlon ?', ['8', '9', '10', '12'], 'C'),
-      q('Quel club a remporté le plus de titres de champion de Ligue 1 ?', ['PSG', 'Marseille', 'Lyon', 'Saint-Étienne'], 'D'),
+      q('Quel club a remporté le plus de titres de champion de Ligue 1 ?', ['PSG', 'Marseille', 'Lyon', 'Saint-Étienne'], 'A'),
       q('En quelle année le Brésil a-t-il remporté sa toute première Coupe du Monde ?', ['1950', '1954', '1958', '1962'], 'C'),
       q('Quel est le record du monde masculin du 100 mètres établi par Usain Bolt en 2009 ?', ['9,58 s', '9,63 s', '9,69 s', '9,74 s'], 'A'),
       q('Quel pays a remporté le plus de Coupes du Monde de football ?', ['Brésil', 'Allemagne', 'Italie', 'Argentine'], 'A'),
