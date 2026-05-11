@@ -1,12 +1,13 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Users, Divide } from 'lucide-react';
 
-export const Jokers = ({ 
-  usedJokers, 
-  onFiftyFifty, 
-  onPhoneFriend, 
+const JokersBase = ({
+  usedJokers,
+  onFiftyFifty,
+  onPhoneFriend,
   onAskAudience,
-  disabled 
+  disabled,
 }) => {
   const jokers = [
     {
@@ -64,8 +65,13 @@ export const Jokers = ({
   );
 };
 
-// Phone Friend Dialog Component
-export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
+/**
+ * Mémoisation : `usedJokers` est une référence stable entre les ticks
+ * (recréée uniquement lors du `setUsedJokers`), handlers en useCallback.
+ */
+export const Jokers = memo(JokersBase);
+
+const PhoneFriendDialogBase = ({ isOpen, response, onClose }) => {
   if (!isOpen) return null;
 
   return (
@@ -113,8 +119,9 @@ export const PhoneFriendDialog = ({ isOpen, response, onClose }) => {
   );
 };
 
-// Audience Results Component
-export const AudienceResults = ({ isOpen, results, message, onClose }) => {
+export const PhoneFriendDialog = memo(PhoneFriendDialogBase);
+
+const AudienceResultsBase = ({ isOpen, results, message, onClose }) => {
   if (!isOpen) return null;
 
   const letters = ['A', 'B', 'C', 'D'];
@@ -179,3 +186,5 @@ export const AudienceResults = ({ isOpen, results, message, onClose }) => {
     </motion.div>
   );
 };
+
+export const AudienceResults = memo(AudienceResultsBase);
