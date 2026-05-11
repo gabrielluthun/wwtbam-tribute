@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const ConfirmActionModal = ({
+const ConfirmActionModalBase = ({
   isOpen,
   title,
   description,
@@ -40,3 +41,5 @@ export const ConfirmActionModal = ({
     )}
   </AnimatePresence>
 );
+
+export const ConfirmActionModal = memo(ConfirmActionModalBase);
