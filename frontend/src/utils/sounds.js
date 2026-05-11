@@ -166,28 +166,51 @@ class SoundManager {
   init() {
     if (this.initialized) return;
     this.initialized = true;
-    this._preloadOneShots();
+    this.preloadCore();
   }
 
-  _preloadOneShots() {
+  /**
+   * Q1–Q5 partagent les mêmes assets (q_tier1, win/lose q1-5), plus win_q5 pour le jingle palier.
+   * On précharge aussi tous les SFX globaux (50:50, ami, public, time-up, goodbye, start-game) —
+   * leur poids cumulé est faible et ils peuvent se déclencher dès la Q1.
+   */
+  preloadCore() {
     const sources = new Set();
+    Object.values(SFX).forEach((src) => { if (src) sources.add(src); });
+    for (let level = 1; level <= 5; level += 1) {
+      this._collectLevelSources(level, sources);
+    }
+    this._preloadSources(sources);
+  }
 
-    Object.values(FINAL_ANSWER_BY_LEVEL).forEach((src) => {
-      if (src) sources.add(src);
-    });
+  /**
+   * Précharge les sons du `level` courant + des `lookahead` niveaux suivants.
+   * Idempotent : les pistes déjà en cache sont ignorées.
+   */
+  preloadForLevel(level, lookahead = 1) {
+    if (!Number.isFinite(level)) return;
+    const sources = new Set();
+    const min = Math.max(1, Math.floor(level));
+    const max = Math.min(15, min + Math.max(0, Math.floor(lookahead)));
+    for (let l = min; l <= max; l += 1) {
+      this._collectLevelSources(l, sources);
+    }
+    this._preloadSources(sources);
+  }
 
-    Object.values(LEVEL_SOUNDS).forEach((conf) => {
-      if (conf?.letsPlay) sources.add(conf.letsPlay);
-      if (conf?.final) sources.add(conf.final);
-      if (conf?.win) sources.add(conf.win);
-      if (conf?.lose) sources.add(conf.lose);
-    });
+  _collectLevelSources(level, sink) {
+    const conf = LEVEL_SOUNDS[level];
+    if (!conf) return;
+    if (conf.letsPlay) sink.add(conf.letsPlay);
+    if (conf.bed) sink.add(conf.bed);
+    if (conf.final) sink.add(conf.final);
+    if (conf.win) sink.add(conf.win);
+    if (conf.lose) sink.add(conf.lose);
+  }
 
-    Object.values(SFX).forEach((src) => {
-      if (src) sources.add(src);
-    });
-
+  _preloadSources(sources) {
     sources.forEach((src) => {
+      if (!src || this.oneShotCache.has(src)) return;
       try {
         const audio = new Audio(src);
         audio.preload = 'auto';
