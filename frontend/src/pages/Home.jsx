@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Users, Info } from 'lucide-react';
+import { HomeHowToPlayModal } from '../components/home/HomeHowToPlayModal';
 
 export const Home = () => {
   const navigate = useNavigate();
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
 
   return (
     <div className="min-h-screen studio-bg flex flex-col items-center justify-center p-6">
@@ -51,58 +54,83 @@ export const Home = () => {
         
         {/* Subtitle */}
         <motion.p
-          className="text-[#E0E0F0] text-lg mb-12 max-w-md"
+          className="text-[#ECECFF] text-lg mb-8 max-w-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          Gagnez 1 million d'euros <i>(virtuellement)</i> en répondant aux 15 questions !
+          Répondez à 15 questions et grimpez jusqu'au million.
         </motion.p>
-        
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+
+        <motion.div
+          className="mode-intro"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.82 }}
+        >
+          Choisissez votre mode de jeu
+        </motion.div>
+
+        {/* Mode cards */}
+        <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
           <motion.button
-            className="btn-primary flex-1 flex items-center justify-center gap-3"
+            className="mode-card mode-card-primary"
             onClick={() => navigate('/setup')}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             data-testid="start-solo-btn"
           >
-            <Play size={24} />
-            Jouer Solo
+            <span className="mode-badge">Le plus immersif</span>
+            <span className="mode-title">
+              <Play size={20} />
+              Jouer Solo
+            </span>
+            <span className="mode-subtitle">Gagnez le million, en retrouvant l'ambiance du jeu télévisé.</span>
           </motion.button>
-          
+
           <motion.button
-            className="btn-secondary flex-1 flex items-center justify-center gap-3"
+            className="mode-card mode-card-secondary"
             onClick={() => navigate('/setup?mode=multi')}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             data-testid="start-multi-btn"
           >
-            <Users size={24} />
-            Multijoueur
+            <span className="mode-badge">Personnalisé</span>
+            <span className="mode-title">
+              <Users size={20} />
+              Multijoueur
+            </span>
+            <span className="mode-subtitle">Remportez le million d'euros avec un(e) ami(e) !</span>
           </motion.button>
         </div>
-        
+
         {/* Info */}
         <motion.div
-          className="mt-12 glass-light rounded-lg p-4 max-w-md"
+          className="mt-6 glass-light rounded-lg p-3 max-w-md border border-white/10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
-          <div className="flex items-start gap-3">
-            <Info size={20} className="text-[#00E5FF] flex-shrink-0 mt-1" />
-            <p className="text-[#D8D8E8] text-sm text-left">
-              <span className="text-white font-semibold">Comment jouer :</span> Jouez au mode de jeu classique en solo, en multijoueur ou créez 
-              vos propres questions avec des thèmes personnalisés.
-            </p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Info size={18} className="text-[#00E5FF] flex-shrink-0" />
+              <p className="text-[#D8D8E8] text-sm text-left">
+                Tout le fonctionnement détaillé est disponible ici.
+              </p>
+            </div>
+            <button
+              className="btn-secondary text-sm"
+              onClick={() => setIsHowToPlayOpen(true)}
+              data-testid="open-how-to-play-modal-btn"
+            >
+              Comment jouer
+            </button>
           </div>
         </motion.div>
 
@@ -116,6 +144,11 @@ export const Home = () => {
           Created by gabri_ailes and Shivii, just for fun :D
         </motion.p>
       </div>
+
+      <HomeHowToPlayModal
+        isOpen={isHowToPlayOpen}
+        onClose={() => setIsHowToPlayOpen(false)}
+      />
     </div>
   );
 };
