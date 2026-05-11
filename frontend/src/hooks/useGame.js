@@ -178,6 +178,12 @@ export function useGame(navigate) {
   const overlayLevel = transitionLevel ?? currentLevel;
   const overlayMoney = MONEY_LEVELS[overlayLevel - 1] ?? MONEY_LEVELS[0];
 
+  // Préchargement progressif : à chaque entrée sur un niveau, prépare aussi le suivant.
+  // Couvre la progression normale et les sauts via le MoneyTree.
+  useEffect(() => {
+    soundManager.preloadForLevel(currentLevel, 1);
+  }, [currentLevel]);
+
   const handleSelectAnswer = useCallback(
     (index) => {
       if (gameState !== GAME_STATES.PLAYING || eliminatedAnswers.includes(index)) return;
