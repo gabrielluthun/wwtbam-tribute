@@ -1,10 +1,15 @@
-/* Main App Styles */
+/* ==========================================================================
+   STYLES GLOBAUX (toutes pages)
+   ========================================================================== */
 .App {
   min-height: 100vh;
   max-width: 100%;
   overflow-x: hidden;
 }
 
+/* ==========================================================================
+   PAGE JEU (Game.jsx) — zone question/réponses/pyramide
+   ========================================================================== */
 /* Question container hexagon frame */
 .question-frame {
   background: linear-gradient(180deg, rgba(26, 26, 58, 0.9) 0%, rgba(11, 11, 26, 0.95) 100%);
@@ -98,7 +103,9 @@
   filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
 }
 
-/* Home page styles */
+/* ==========================================================================
+   PAGE ACCUEIL (Home.jsx) — hero + choix des modes
+   ========================================================================== */
 .home-container {
   min-height: 100vh;
   display: flex;
@@ -207,15 +214,18 @@
   font-size: 0.78rem;
 }
 
+/* ==========================================================================
+   MODALE "COMMENT JOUER" (HomeHowToPlayModal.jsx)
+   ========================================================================== */
 .home-help-modal {
-  width: min(760px, 100%);
-  max-height: 88vh;
+  width: min(900px, 100%);
+  max-height: 94vh;
   overflow: auto;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(0, 229, 255, 0.28);
-  background: linear-gradient(180deg, rgba(16, 16, 36, 0.96) 0%, rgba(9, 9, 20, 0.97) 100%);
+  background: linear-gradient(180deg, rgba(16, 16, 36, 0.97) 0%, rgba(8, 8, 18, 0.98) 100%);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-  padding: 1.1rem 1.15rem 1.2rem;
+  padding: 1.1rem 1.2rem 1.25rem;
 }
 
 .home-help-header {
@@ -230,7 +240,13 @@
   color: #fff;
   font-family: 'Chivo', sans-serif;
   font-weight: 700;
-  font-size: 1.35rem;
+  font-size: 1.6rem;
+}
+
+.home-help-intro {
+  color: #bfc4de;
+  font-size: 0.98rem;
+  margin-top: 0.2rem;
 }
 
 .home-help-close {
@@ -252,59 +268,225 @@
   box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
 }
 
-.home-help-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.9rem;
+.home-help-quickfacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
 }
 
-.home-help-content section {
+.home-help-quickfacts span {
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 229, 255, 0.32);
+  background: rgba(0, 229, 255, 0.08);
+  color: #9befff;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.home-help-accordion {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.home-help-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.home-help-content h4 {
-  margin: 0 0 0.45rem;
-  color: #00e5ff;
-  font-size: 0.9rem;
+.home-help-item.is-open {
+  border-color: rgba(0, 229, 255, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(0, 229, 255, 0.14);
+}
+
+.home-help-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.75rem 0.82rem;
+  color: #fff;
+  text-align: left;
+  background: transparent;
+}
+
+.home-help-trigger-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: 'Chivo', sans-serif;
+  font-size: 1.04rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
 }
 
-.home-help-content p,
-.home-help-content li {
+.home-help-chevron {
+  color: #b5bbd3;
+  transition: transform 0.2s ease;
+}
+
+.home-help-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.home-help-panel {
+  overflow: hidden;
+}
+
+.home-help-panel-inner {
+  padding: 0 0.85rem 0.85rem;
+}
+
+.home-help-panel-inner p,
+.home-help-panel-inner li {
   color: #d8d8e8;
-  font-size: 0.84rem;
-  line-height: 1.45;
+  font-size: 0.98rem;
+  line-height: 1.52;
 }
 
-.home-help-content ul {
+.home-help-panel-inner p {
+  margin: 0 0 0.45rem;
+}
+
+.home-help-panel-inner ul {
   margin: 0;
   padding-left: 1rem;
   display: grid;
   gap: 0.32rem;
 }
 
+.home-help-dual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.home-help-paragraph-card {
+  margin: 0;
+  padding: 0.82rem 0.86rem 0.88rem;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  height: 100%;
+}
+
+.home-help-import-card {
+  border-color: rgba(0, 229, 255, 0.25);
+}
+
+.home-help-export-card {
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.home-help-paragraph-card h5 {
+  margin: 0 0 0.55rem;
+  color: #fff;
+  font-size: 0.96rem;
+  font-family: 'Chivo', sans-serif;
+  font-weight: 700;
+}
+
+.home-help-paragraph-card p {
+  margin: 0;
+  line-height: 1.58;
+}
+
+.home-help-step-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: help-steps;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.home-help-step-list li {
+  counter-increment: help-steps;
+  padding-left: 0;
+  line-height: 1.45;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-help-step-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.home-help-step-list li::before {
+  content: "Étape " counter(help-steps) " :";
+  display: inline-block;
+  min-width: 5.6rem;
+  margin-right: 0.35rem;
+  color: #00e5ff;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.home-help-solution-title {
+  margin: 0 0 0.45rem;
+  color: #ffffff;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.home-help-solution-separator {
+  margin-top: 0.75rem;
+  margin-bottom: 0.7rem;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home-help-estimate {
+  margin: 0.55rem 0 0;
+  color: #bfc4de;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 .home-help-checkpoints {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.home-help-checkpoint-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.45rem;
-  margin-top: 0.55rem;
-}
-
-.home-help-checkpoints span {
-  border-radius: 9999px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.35);
-  background: rgba(255, 215, 0, 0.12);
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%);
   color: #ffd700;
-  padding: 0.22rem 0.56rem;
-  font-size: 0.76rem;
-  font-weight: 600;
+  padding: 0.45rem 0.55rem;
 }
 
-/* Setup page styles */
+.home-help-checkpoint-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.home-help-checkpoint-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 215, 0, 0.78);
+}
+
+.home-help-checkpoint-amount {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   PAGE SETUP (SetupQuestions.jsx) — conteneurs et cartes
+   ========================================================================== */
 .setup-container {
   min-height: 100vh;
   padding: 2rem;
@@ -330,6 +512,9 @@
   outline-offset: 3px;
 }
 
+/* ==========================================================================
+   COMPOSANTS UI PARTAGÉS — inputs, boutons, barres d'action
+   ========================================================================== */
 /* Input styling */
 .game-input {
   background: rgba(11, 11, 26, 0.8);
@@ -492,6 +677,9 @@ button {
   background-repeat: no-repeat;
 }
 
+/* ==========================================================================
+   COMPOSANTS JEU SPÉCIFIQUES — dialogs, bar chart, fond fixe
+   ========================================================================== */
 /* Audience bar chart */
 .audience-bar {
   background: linear-gradient(180deg, #00E5FF 0%, #0091EA 100%);
@@ -507,6 +695,9 @@ button {
   padding: 2rem;
 }
 
+/* ==========================================================================
+   RESPONSIVE — ajustements tablette/mobile
+   ========================================================================== */
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .money-tree-panel {
@@ -583,12 +774,31 @@ button {
     font-size: 1rem;
   }
 
-  .home-help-content {
+  .home-help-modal {
+    padding: 0.95rem 0.95rem 1rem;
+  }
+
+  .home-help-trigger-left {
+    font-size: 0.96rem;
+  }
+
+  .home-help-checkpoints {
     grid-template-columns: 1fr;
   }
 
-  .home-help-modal {
-    padding: 0.95rem 0.95rem 1rem;
+  .home-help-dual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-help-step-list li {
+    padding-left: 0;
+  }
+
+  .home-help-step-list li::before {
+    position: static;
+    display: block;
+    min-width: 0;
+    margin-bottom: 0.1rem;
   }
 }
 
