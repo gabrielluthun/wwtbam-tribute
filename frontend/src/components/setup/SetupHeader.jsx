@@ -99,7 +99,7 @@ export const SetupHeader = ({
           data-testid="open-theme-selector"
         >
           <Library size={16} />
-          Choisir un thème
+          Choisir un thème pré-conçu
         </button>
         <button
           className="btn-secondary flex items-center justify-center gap-2 text-sm"
@@ -107,7 +107,7 @@ export const SetupHeader = ({
           data-testid="save-theme-btn"
         >
           <Save size={16} />
-          Enregistrer ce thème
+          Enregistrer ce thème personnalisé
         </button>
         <button
           className="btn-secondary flex items-center justify-center gap-2 text-sm"
@@ -115,7 +115,7 @@ export const SetupHeader = ({
           data-testid="toggle-import-export"
         >
           <Settings size={16} />
-          Options
+          Options supplémentaires
         </button>
       </div>
 
