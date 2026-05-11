@@ -1,11 +1,12 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { ANSWER_LETTERS } from '../utils/gameData';
 
-export const AnswerButton = ({ 
-  index, 
-  answer, 
+const AnswerButtonBase = ({
+  index,
+  answer,
   state, // 'default' | 'selected' | 'correct' | 'wrong' | 'eliminated'
-  onClick, 
+  onClick,
   disabled,
   audiencePercent,
   /** Révélation après erreur joueur : clignotement vert dédié (sans flash « bonne réponse » classique). */
@@ -60,3 +61,10 @@ export const AnswerButton = ({
     </motion.button>
   );
 };
+
+/**
+ * Mémoisation : props 100 % primitives/fonctions stables (handlers en useCallback
+ * côté useGame), donc le comparateur shallow par défaut suffit. Évite le re-render
+ * des 4 boutons à chaque tick du timer.
+ */
+export const AnswerButton = memo(AnswerButtonBase);
