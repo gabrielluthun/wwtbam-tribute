@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
 
-export const TimerDisplay = ({ timeRemaining }) => {
+const TimerDisplayBase = ({ timeRemaining }) => {
   const isWarning = timeRemaining <= 10;
   const isCritical = timeRemaining <= 5;
 
@@ -23,3 +24,9 @@ export const TimerDisplay = ({ timeRemaining }) => {
     </motion.div>
   );
 };
+
+/**
+ * Mémoisation : seul composant qui *doit* re-render à chaque seconde.
+ * `timeRemaining` est la seule prop, on isole donc le tick ici.
+ */
+export const TimerDisplay = memo(TimerDisplayBase);
