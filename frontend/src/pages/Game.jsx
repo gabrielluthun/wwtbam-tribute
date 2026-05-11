@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX, Home, RotateCcw, Clock, Eye } from 'lucide-react';
 import { AnswerButton } from '../components/AnswerButton';
@@ -65,21 +65,28 @@ export const Game = () => {
     handleRestart,
   } = useGame(navigate);
 
-  const openHomeConfirm = () => setConfirmAction('home');
-  const openWalkAwayConfirm = () => {
+  const openHomeConfirm = useCallback(() => setConfirmAction('home'), []);
+  const openWalkAwayConfirm = useCallback(() => {
     if (gameState !== GAME_STATES.PLAYING) return;
     setConfirmAction('walkaway');
-  };
+  }, [gameState]);
 
-  const closeConfirmModal = () => setConfirmAction(null);
-  const confirmCurrentAction = () => {
+  const closeConfirmModal = useCallback(() => setConfirmAction(null), []);
+  const confirmCurrentAction = useCallback(() => {
     if (confirmAction === 'home') {
       navigate('/');
     } else if (confirmAction === 'walkaway') {
       handleWalkAway();
     }
     setConfirmAction(null);
-  };
+  }, [confirmAction, navigate, handleWalkAway]);
+
+  const closeMoneyTree = useCallback(() => setShowMoneyTree(false), [setShowMoneyTree]);
+  const openMoneyTree = useCallback(() => setShowMoneyTree(true), [setShowMoneyTree]);
+  const onMasterVolumeChange = useCallback(
+    (e) => setMasterVolume(Number(e.target.value) / 100),
+    [setMasterVolume],
+  );
 
   const confirmTitle = confirmAction === 'home' ? 'Retourner au menu ?' : 'Partir avec vos gains ?';
   const confirmDescription = confirmAction === 'home'
@@ -258,7 +265,7 @@ export const Game = () => {
                       max={100}
                       step={1}
                       value={Math.round(masterVolume * 100)}
-                      onChange={(e) => setMasterVolume(Number(e.target.value) / 100)}
+                      onChange={onMasterVolumeChange}
                       className="volume-slider shrink-0 min-w-0"
                       style={{ '--vol': masterVolume }}
                       data-testid="volume-slider"
@@ -319,20 +326,23 @@ export const Game = () => {
           </motion.div>
 
           <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:max-w-4xl sm:mx-auto mb-6">
-            {currentQuestion.answers.map((answer, index) => (
-              <AnswerButton
-                key={index}
-                index={index}
-                answer={answer}
-                state={answerStates[index]}
-                onClick={handleSelectAnswer}
-                disabled={gameState !== GAME_STATES.PLAYING && gameState !== GAME_STATES.SELECTED}
-                audiencePercent={audienceResults ? audienceResults[index] : undefined}
-                wrongOutcomeReveal={
-                  answerStates[index] === 'correct' && answerStates.some((s) => s === 'wrong')
-                }
-              />
-            ))}
+            {(() => {
+              const hasWrong = answerStates.some((s) => s === 'wrong');
+              const isInteractive =
+                gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.SELECTED;
+              return currentQuestion.answers.map((answer, index) => (
+                <AnswerButton
+                  key={index}
+                  index={index}
+                  answer={answer}
+                  state={answerStates[index]}
+                  onClick={handleSelectAnswer}
+                  disabled={!isInteractive}
+                  audiencePercent={audienceResults ? audienceResults[index] : undefined}
+                  wrongOutcomeReveal={answerStates[index] === 'correct' && hasWrong}
+                />
+              ));
+            })()}
           </div>
 
           <AnimatePresence>
@@ -399,7 +409,7 @@ export const Game = () => {
         <MoneyTree
           currentLevel={currentLevel}
           isOpen={showMoneyTree}
-          onClose={() => setShowMoneyTree(false)}
+          onClose={closeMoneyTree}
           onSelectLevel={handleSelectMoneyLevel}
         />
       </div>
@@ -415,7 +425,7 @@ export const Game = () => {
         </button>
         <button
           className="btn-secondary text-sm"
-          onClick={() => setShowMoneyTree(true)}
+          onClick={openMoneyTree}
           data-testid="show-money-tree-btn-mobile"
         >
           Gains
