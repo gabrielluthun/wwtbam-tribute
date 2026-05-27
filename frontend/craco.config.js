@@ -50,6 +50,19 @@ let webpackConfig = {
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);
       }
+
+      // PWA : sons MP3 mis en cache à la demande (pas dans le precache initial)
+      if (process.env.NODE_ENV === 'production') {
+        webpackConfig.plugins.forEach((plugin) => {
+          if (plugin?.constructor?.name === 'InjectManifest') {
+            const existing = plugin.config.exclude;
+            plugin.config.exclude = Array.isArray(existing)
+              ? [...existing, /\.mp3$/i]
+              : [/\.mp3$/i];
+          }
+        });
+      }
+
       return webpackConfig;
     },
   },
