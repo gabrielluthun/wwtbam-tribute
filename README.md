@@ -15,6 +15,7 @@ Projet **ludique et non officiel**, pensé pour les soirées entre amis, en fami
 - [Prérequis](#prérequis)
 - [Installation et lancement (frontend)](#installation-et-lancement-frontend)
 - [Scripts npm / yarn](#scripts-npm--yarn)
+- [Application progressive (PWA)](#application-progressive-pwa)
 - [Backend optionnel (FastAPI)](#backend-optionnel-fastapi)
 - [Technologies](#technologies)
 - [Structure du dépôt](#structure-du-dépôt)
@@ -48,6 +49,7 @@ En partie, l’écran est organisé ainsi :
 | **Timer** | Optionnel, durée configurable (**10 à 120** secondes, défaut 30) ; le temps peut se mettre en pause lors de certains écrans (jokers, validation) |
 | **Données** | **Import** et **export** des quiz en **JSON** (métadonnées + réglages utiles au partage) |
 | **Ambiance** | Sons par événement (suspense, bonne/mauvaise réponse, palier, million, etc.), interface sombre type plateau TV |
+| **PWA** | Installable sur l’écran d’accueil ; cache hors ligne (shell + médias) ; bannière de mise à jour quand une nouvelle version est déployée |
 
 ---
 
@@ -126,10 +128,29 @@ L’URL locale est en général **http://localhost:3000** (voir la sortie du ter
 
 ---
 
+## Application progressive (PWA)
+
+En **build de production**, l’app s’enregistre comme **Progressive Web App** :
+
+- **Manifeste** (`frontend/public/manifest.json`) : nom, icônes 192/512 (dont maskable), thème sombre, affichage `standalone`.
+- **Service worker** (Workbox via CRA) : precache du shell ; navigation SPA ; cache des images ; **sons et visuels lourds** (MP3, JPEG, WebP) mis en cache **à la demande** pour ne pas gonfler le premier chargement.
+- **Mises à jour** : lorsqu’une nouvelle version est disponible, une bannière propose **Mettre à jour** ; l’app recharge ensuite avec le nouveau service worker.
+
+Le service worker n’est **pas** actif en `npm start` (mode développement). Pour tester la PWA en local :
+
+```bash
+cd frontend
+npm run build
+npx serve -s build
+```
+
+Ouvrez l’URL du jeu, puis utilisez **Installer l’application** ou **Ajouter à l’écran d’accueil** selon le navigateur. 
+Les quiz et thèmes personnalisés restent dans le **stockage local** du navigateur ; le cache PWA concerne surtout les fichiers statiques et les médias.
+
 ## Technologies
 
-- **Frontend** : React 19, React Router 7, **Tailwind CSS** 3, **Framer Motion**, **Craco** au-dessus de Create React App, Radix UI (switch), Lucide (icônes).
-- **Données de jeu** : état et quiz gérés **côté client** (formulaire, thèmes, import/export JSON).
+- **Frontend** : React 19, React Router 7, **Tailwind CSS** 3, **Framer Motion**, **Craco** au-dessus de Create React App, Radix UI (switch), Lucide (icônes), **Workbox** (PWA).
+- **Données de jeu** : état et quiz gérés **côté client** (`localStorage` pour les thèmes, `sessionStorage` pour la session de partie, import/export JSON).
 
 ---
 
@@ -137,11 +158,11 @@ L’URL locale est en général **http://localhost:3000** (voir la sortie du ter
 
 ```
 QVGDM/
-├── frontend/          # Application React (écran principal du projet)
-├── backend/           # API FastAPI + MongoDB (optionnelle pour le jeu actuel)
-├── docs/screenshots/  # Captures pour la documentation
-├── memory/PRD.md      # Notes produit / historique de fonctionnalités
-└── tests/             # Paquet Python minimal (`__init__.py` seul pour l’instant)
+├── frontend/              # Application React + PWA
+│   ├── public/            # manifest.json, icônes, index.html
+├── backend/               # API FastAPI + MongoDB (optionnelle)
+├── docs/screenshots/      # Captures pour la documentation
+└── memory/PRD.md          # Notes produit / historique de fonctionnalités
 ```
 
 ---
