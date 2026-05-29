@@ -1,5 +1,6 @@
 // Gestionnaire audio : beds q_tier1 / q6..q15, finaux final-answer-q*-* (une piste par question Q6–15),
-// jingles win-q* / lose-q*, Let's Play (Q6–15) pour l’overlay de transition.
+// jingles win-q* / lose-q*, Let's Play (Q6–15) pour l’overlay de transition,
+// beds quitter1 (départ volontaire Q1–10) / quitter2 (Q11–15).
 // Q6+ : au clic « question suivante », le bed de la question suivante démarre puis les one-shots
 // (win / let’s play encore actifs) sont coupés net — pas de chevauchement type fondu avec le stinger.
 // Win / lose : lecture jusqu’à la fin du fichier (pas de plafond temporel).
@@ -52,6 +53,8 @@ import phone_friend_sfx from '../asset/sounds/phone_friend.mp3';
 import ask_audience_sfx from '../asset/sounds/ask_audience.mp3';
 import time_up from '../asset/sounds/time_up.mp3';
 import goodbye from '../asset/sounds/goodbye.mp3';
+import quitter_bed_q1_10 from '../asset/sounds/quitter1.mp3';
+import quitter_bed_q11_15 from '../asset/sounds/quitter2.mp3';
 import start_game from '../asset/sounds/start-game.mp3';
 
 import lets_play_q6 from "../asset/sounds/13 Let's Play €3,000.mp3";
@@ -114,6 +117,17 @@ const SFX = {
   startGame: start_game,
 };
 
+/** Bed de départ volontaire : Q1–10 → quitter1, Q11–15 → quitter2. */
+const WALK_AWAY_BED = {
+  q1_10: quitter_bed_q1_10,
+  q11_15: quitter_bed_q11_15,
+};
+
+function walkAwayBedSrcForLevel(level) {
+  if (!Number.isFinite(level) || level < 11) return WALK_AWAY_BED.q1_10;
+  return WALK_AWAY_BED.q11_15;
+}
+
 class SoundManager {
   constructor() {
     this.bed = null;
@@ -125,6 +139,8 @@ class SoundManager {
     /** Dernière valeur > 0 avant passage à 0 (mute ou curseur à zéro), pour toggle mute. */
     this._volumeBeforeMute = 0.7;
     this.bedVolume = 0.35;
+    /** Départ volontaire (quitter1/2) : même échelle que les SFX, plus fort que les beds de question. */
+    this.walkAwayBedVolume = 1;
     this.initialized = false;
   }
 
@@ -150,10 +166,18 @@ class SoundManager {
     return this.volume;
   }
 
+  _bedVolumeScaleForCurrentBed() {
+    const src = this.bedSrc;
+    if (src === WALK_AWAY_BED.q1_10 || src === WALK_AWAY_BED.q11_15) {
+      return this.walkAwayBedVolume;
+    }
+    return this.bedVolume;
+  }
+
   _applyVolumeToActiveOutputs() {
     if (this.bed) {
       try {
-        this.bed.volume = this.volume * this.bedVolume;
+        this.bed.volume = this.volume * this._bedVolumeScaleForCurrentBed();
       } catch (_) { /* ignore */ }
     }
     this.oneshots.forEach((audio) => {
@@ -177,6 +201,7 @@ class SoundManager {
   preloadCore() {
     const sources = new Set();
     Object.values(SFX).forEach((src) => { if (src) sources.add(src); });
+    Object.values(WALK_AWAY_BED).forEach((src) => { if (src) sources.add(src); });
     for (let level = 1; level <= 5; level += 1) {
       this._collectLevelSources(level, sources);
     }
@@ -324,6 +349,26 @@ class SoundManager {
       this.bed = null;
       this.bedSrc = null;
     }
+  }
+
+  /**
+   * Départ volontaire : bed quitter1 (Q1–10) ou quitter2 (Q11–15), sans boucle.
+   * Coupe le bed de question et les stingers en cours.
+   */
+  playWalkAwayBed(level) {
+    if (this.volume <= 0) return;
+    const src = walkAwayBedSrcForLevel(level);
+    if (!src) return;
+    this.stopBed();
+    this._stopAllOneshots();
+    try {
+      const audio = new Audio(src);
+      audio.loop = false;
+      audio.volume = this.volume * this.walkAwayBedVolume;
+      audio.play().catch(() => {});
+      this.bed = audio;
+      this.bedSrc = src;
+    } catch (_) { /* ignore */ }
   }
 
   /** Coupe les one-shots en cours (ex. jingle / « bed » de bonne réponse) sans toucher au bed de question. */

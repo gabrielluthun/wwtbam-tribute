@@ -459,8 +459,7 @@ export function useGame(navigate) {
   }, [maybeResumeBedAfterUnmute]);
 
   const handleWalkAway = useCallback(() => {
-    soundManager.stopBed();
-    soundManager.playGoodbye();
+    soundManager.playWalkAwayBed(currentLevel);
     if (gameMode === 'multi') {
       setScores((prev) => {
         const newScores = [...prev];
