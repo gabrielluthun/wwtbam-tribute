@@ -86,7 +86,6 @@ export const SetupQuestions = () => {
         <SetupHeader
           completedCount={completedCount}
           themeStepCompleted={themeStepCompleted}
-          questionsStepCompleted={questionsStepCompleted}
           canLaunchGame={canLaunchGame}
           loadedTheme={loadedTheme}
           shuffleEnabled={shuffleEnabled}

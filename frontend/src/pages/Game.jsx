@@ -9,8 +9,7 @@ import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers
 import { TimerDisplay } from '../components/TimerDisplay';
 import { StageLighting } from '../components/stage/StageLighting';
 import { Confetti } from '../components/stage/Confetti';
-import { AnimatedAmount, formatEuro } from '../components/stage/AnimatedAmount';
-import { MONEY_LEVELS, ANSWER_LETTERS } from '../utils/gameData';
+import { MONEY_LEVELS, ANSWER_LETTERS, formatEuro } from '../utils/gameData';
 import { useGame } from '../hooks/useGame';
 import { GAME_STATES } from '../game/gameConstants';
 
@@ -118,6 +117,10 @@ export const Game = () => {
   const isAnswerLocked =
     gameState === GAME_STATES.AWAITING_REVEAL || gameState === GAME_STATES.REVEALING;
 
+  // Chrono : « En pause » dès qu'une réponse est choisie, masqué une fois le verdict affiché.
+  const showTimer = !hasWrongAnswer && !isVerdictCorrect && gameState !== GAME_STATES.TRANSITION;
+  const isTimerOnHold = gameState === GAME_STATES.SELECTED || isAnswerLocked;
+
   let stagePhase = 'idle';
   if (hasWrongAnswer || gameState === GAME_STATES.TIMEOUT) stagePhase = 'wrong';
   else if (isVerdictCorrect) stagePhase = 'correct';
@@ -181,7 +184,7 @@ export const Game = () => {
   if (gameState === GAME_STATES.LOST || gameState === GAME_STATES.WON || gameState === GAME_STATES.MILLION || gameState === GAME_STATES.TIMEOUT) {
     const validatedAmount = currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].amount : 0;
     const isLoss = gameState === GAME_STATES.LOST || gameState === GAME_STATES.TIMEOUT;
-    // Gain : le compteur monte depuis 0. Perte : il chute du montant acquis vers le palier garanti.
+    // amountTo : gain final. amountFrom : montant acquis avant l'erreur (affiché barré en cas de perte).
     let amountFrom = 0;
     let amountTo = guaranteedMoney.amount;
     if (gameState === GAME_STATES.MILLION) amountTo = MONEY_LEVELS[14].amount;
@@ -197,72 +200,66 @@ export const Game = () => {
         {gameState === GAME_STATES.WON && amountTo > 0 && <Confetti mode="burst" burstKey={currentLevel} />}
 
         <motion.div
-          className={`relative z-10 glass rounded-2xl p-5 sm:p-8 max-w-lg w-full min-w-0 max-h-[min(90dvh,90vh)] overflow-y-auto text-center border ${
-            gameState === GAME_STATES.MILLION || gameState === GAME_STATES.WON
-              ? 'border-green-500/40 shadow-[inset_0_0_60px_rgba(46,125,50,0.12)]'
-              : 'border-red-500/30 shadow-[inset_0_0_60px_rgba(211,47,47,0.10)]'
-          }`}
-          initial={{ scale: 0.8, opacity: 0 }}
+          className="relative z-10 w-full max-w-5xl min-w-0 flex flex-col items-center text-center"
+          initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           data-testid="game-over-screen"
         >
           {gameState === GAME_STATES.MILLION ? (
             <>
               <motion.h1
-                className="text-4xl sm:text-5xl font-black font-['Chivo'] text-[#FFD700] mb-4 text-glow-gold"
-                animate={{ scale: [1, 1.1, 1] }}
+                className="text-5xl sm:text-6xl lg:text-7xl font-black font-['Chivo'] text-[#FFD700] mb-3 text-glow-gold"
+                animate={{ scale: [1, 1.08, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
               >
-                MILLIONNAIRE !
+                MILLIONNAIRE{' '}!
               </motion.h1>
-              <p className="text-[#00E5FF] text-xl mb-2">Félicitations !</p>
+              <p className="text-[#00E5FF] text-xl lg:text-2xl mb-4">Félicitations{' '}!</p>
             </>
           ) : gameState === GAME_STATES.WON ? (
             <>
-              <h1 className="text-3xl font-bold font-['Chivo'] text-[#00E5FF] mb-4">
-                Bien joué !
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black font-['Chivo'] text-[#00E5FF] mb-3">
+                Bien joué{' '}!
               </h1>
-              <p className="text-[#B0B0C0] mb-2">Vous repartez avec</p>
+              <p className="text-[#D6D6E2] text-lg sm:text-2xl mb-4">Vous repartez avec</p>
             </>
           ) : gameState === GAME_STATES.TIMEOUT ? (
             <>
               <motion.div
-                className="text-6xl mb-4"
+                className="mb-3"
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 0.5 }}
               >
-                <Clock className="mx-auto text-[#D32F2F]" size={64} />
+                <Clock className="mx-auto text-[#FF5A5A]" size={64} />
               </motion.div>
-              <h1 className="text-3xl font-bold font-['Chivo'] text-[#D32F2F] mb-4">
-                Temps écoulé !
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black font-['Chivo'] text-[#FF5A5A] mb-3">
+                Temps écoulé{' '}!
               </h1>
-              <p className="text-[#B0B0C0] mb-2">Vous repartez avec</p>
+              <p className="text-[#D6D6E2] text-lg sm:text-2xl mb-4">Vous repartez avec</p>
             </>
           ) : (
             <>
-              <h1 className="text-3xl font-bold font-['Chivo'] text-[#D32F2F] mb-4">
-                Mauvaise réponse !
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black font-['Chivo'] text-[#FF5A5A] mb-3">
+                Mauvaise réponse{' '}!
               </h1>
-              <p className="text-[#B0B0C0] mb-2">Vous repartez avec</p>
+              <p className="text-[#D6D6E2] text-lg sm:text-2xl mb-4">Vous repartez avec</p>
             </>
           )}
 
-          <AnimatedAmount
-            from={amountFrom}
-            to={amountTo}
-            durationMs={gameState === GAME_STATES.MILLION ? 3000 : 1800}
-            delayMs={isLoss ? 900 : 300}
-            className={`block text-4xl font-black font-['Chivo'] text-[#FFD700] text-glow-gold tabular-nums ${showsDrop ? 'mb-2' : 'mb-8'}`}
+          <span
+            className={`block max-w-full text-6xl sm:text-8xl lg:text-[168px] leading-none font-black font-['Chivo'] text-[#FFD700] text-glow-gold tabular-nums break-words ${showsDrop ? 'mb-4' : 'mb-10'}`}
             data-testid="final-amount"
-          />
+          >
+            {formatEuro(amountTo)}
+          </span>
           {showsDrop && (
-            <p className="text-[#B0B0C0] text-sm mb-8" data-testid="lost-amount">
-              au lieu de <span className="line-through decoration-[#D32F2F] decoration-2">{formatEuro(amountFrom)}</span>
+            <p className="text-[#D6D6E2] text-base sm:text-xl lg:text-2xl mb-10" data-testid="lost-amount">
+              au lieu de <span className="line-through decoration-[#FF5A5A] decoration-[3px]">{formatEuro(amountFrom)}</span>
             </p>
           )}
 
           {gameMode === 'multi' && (
-            <div className="mb-6 p-4 bg-white/5 rounded-lg">
+            <div className="mb-8 p-4 bg-white/5 rounded-lg w-full max-w-md">
               <h3 className="text-white font-semibold mb-2">Scores</h3>
               {playerNames.map((name, idx) => (
                 <div key={idx} className="flex justify-between text-[#B0B0C0]">
@@ -273,21 +270,21 @@ export const Game = () => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
-              className="btn-primary flex-1 flex items-center justify-center gap-2"
+              className="btn-primary flex items-center justify-center gap-3 text-lg lg:text-xl px-10 py-4"
               onClick={handleRestart}
               data-testid="restart-btn"
             >
-              <RotateCcw size={20} />
+              <RotateCcw size={22} />
               Rejouer
             </button>
             <button
-              className="btn-secondary flex-1 flex items-center justify-center gap-2"
+              className="btn-secondary flex items-center justify-center gap-3 text-lg lg:text-xl px-9 py-4"
               onClick={openHomeConfirm}
               data-testid="home-btn"
             >
-              <Home size={20} />
+              <Home size={22} />
               Accueil
             </button>
           </div>
@@ -311,7 +308,8 @@ export const Game = () => {
       {showCheckpointConfetti && <Confetti mode="burst" burstKey={currentLevel} />}
 
       <div className="relative z-10 flex min-h-screen w-full max-w-full min-w-0 flex-col lg:flex-row">
-        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 sm:p-6 lg:pr-72">
+        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 sm:p-6 lg:px-10">
+          <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
           <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <button
@@ -368,7 +366,7 @@ export const Game = () => {
                   </label>
                 </div>
               </div>
-              {timerEnabled && <TimerDisplay timeRemaining={timeRemaining} />}
+              {timerEnabled && showTimer && <TimerDisplay timeRemaining={timeRemaining} paused={isTimerOnHold} />}
             </div>
 
             {gameMode === 'multi' && (
@@ -398,25 +396,26 @@ export const Game = () => {
             />
           </div>
 
+          <div className="flex flex-1 flex-col lg:justify-center">
           <div className="text-center mb-6">
-            <span className="text-[#00E5FF] text-sm uppercase tracking-wider">Question {currentLevel}</span>
-            <h2 className={`text-2xl sm:text-3xl font-bold font-['Chivo'] ${currentMoney.checkpoint ? 'text-[#00E5FF]' : 'text-[#FFD700]'} text-glow-gold`}>
+            <span className="text-[#00E5FF] text-sm lg:text-base uppercase tracking-wider">Question {currentLevel}</span>
+            <h2 className={`text-2xl sm:text-4xl lg:text-6xl font-bold lg:font-black font-['Chivo'] ${currentMoney.checkpoint ? 'text-[#00E5FF]' : 'text-[#FFD700]'} text-glow-gold`}>
               {currentMoney.display}
             </h2>
           </div>
 
           <motion.div
-            className="question-frame p-6 sm:p-8 mb-6 max-w-4xl mx-auto w-full"
+            className="question-frame p-6 sm:p-8 lg:px-11 lg:py-9 mb-6 w-full"
             key={currentLevel}
             initial={false}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-lg sm:text-xl lg:text-2xl text-center font-medium" style={{ color: 'var(--text-primary)' }} data-testid="question-text">
+            <p className="text-lg sm:text-2xl lg:text-[38px] lg:leading-tight text-center font-medium" style={{ color: 'var(--text-primary)' }} data-testid="question-text">
               {currentQuestion.question}
             </p>
           </motion.div>
 
-          <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:max-w-4xl sm:mx-auto mb-6">
+          <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-x-6 lg:gap-y-5 mb-6">
             {(() => {
               const hasWrong = answerStates.some((s) => s === 'wrong');
               const isInteractive =
@@ -438,10 +437,13 @@ export const Game = () => {
             })()}
           </div>
 
+          {/* Emplacement de hauteur fixe sur grand écran : le bloc est centré verticalement, donc des
+              boutons de hauteur variable (révélation, dernier mot, verdict) le feraient sauter à chaque étape. */}
+          <div className="relative lg:h-28" data-testid="host-actions-slot">
           <AnimatePresence>
             {gameState === GAME_STATES.PLAYING && !allAnswersRevealed && (
               <motion.div
-                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
+                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
@@ -470,7 +472,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.SELECTED && (
               <motion.div
-                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
+                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -496,7 +498,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.AWAITING_REVEAL && (
               <motion.div
-                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full"
+                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -526,6 +528,9 @@ export const Game = () => {
             >
             </motion.div>
           )}
+          </div>
+          </div>
+          </div>
         </div>
 
         <MoneyTree
@@ -589,19 +594,7 @@ export const Game = () => {
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8 }}
               >
-                Pour{' '}
-                {gameState === GAME_STATES.TRANSITION ? (
-                  <AnimatedAmount
-                    key={overlayLevel}
-                    from={MONEY_LEVELS[overlayLevel - 2]?.amount ?? 0}
-                    to={overlayMoney.amount}
-                    durationMs={1400}
-                    delayMs={350}
-                    className="tabular-nums"
-                  />
-                ) : (
-                  overlayMoney.display
-                )}
+                {`Pour ${overlayMoney.display}`}
               </motion.h1>
               {overlayMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
                 <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">

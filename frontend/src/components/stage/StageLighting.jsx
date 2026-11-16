@@ -31,7 +31,9 @@ function darkeningCurve(level) {
 
 const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
   const stake = Math.min(1, Math.max(0, (level - 1) / 14));
-  const dark = darkeningCurve(level);
+  // Mauvaise réponse : la tension retombe, la salle se rallume à son niveau de base (celui des Q1–Q5).
+  const lightsUp = phase === 'wrong';
+  const dark = lightsUp ? 0 : darkeningCurve(level);
   const tension = phase === 'tension';
 
   // Très léger (8 %) sur Q1–Q5, bien voilé dès Q11, quasi noir (92 %) en Q15 ; la tension ajoute une marche.

@@ -25,10 +25,14 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
   const [editDescription, setEditDescription] = useState('');
   const [editColor, setEditColor] = useState('#8B5CF6');
   const [editError, setEditError] = useState('');
+  const [showAdultThemes, setShowAdultThemes] = useState(false);
 
   if (!isOpen) return null;
 
   const themes = getThemesList();
+  // Thèmes adultes rangés à part et masqués par défaut (soirées en famille).
+  const generalThemes = themes.filter((theme) => !theme.adult);
+  const adultThemes = themes.filter((theme) => theme.adult);
   const editingTheme = themes.find((theme) => theme.id === editingThemeId) || null;
 
   const openEditTheme = (theme) => {
@@ -101,6 +105,97 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
     closeDeleteModal();
   };
 
+  /** Carte d'un thème (réutilisée pour la grille principale et la section adultes). */
+  const renderThemeCard = (theme, idx) => {
+    const Icon = ICON_MAP[theme.icon] || Brain;
+    
+    return (
+      <motion.div
+        key={theme.id}
+        className="theme-card relative overflow-hidden rounded-xl p-5 text-left transition-all border-2"
+        style={{
+          borderColor: `${theme.color}40`,
+          backgroundColor: 'rgba(11, 11, 26, 0.85)',
+          background: `linear-gradient(135deg, ${theme.color}15 0%, rgba(11, 11, 26, 0.8) 100%)`,
+        }}
+        role="button"
+        tabIndex={0}
+        onClick={() => handleCardClick(theme)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCardClick(theme);
+          }
+        }}
+        initial={{ opacity: 1, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: idx * 0.05 }}
+        whileHover={{ 
+          scale: 1.03, 
+          borderColor: theme.color,
+          boxShadow: `0 0 30px ${theme.color}40`,
+        }}
+        whileTap={{ scale: 0.98 }}
+        data-testid={`theme-${theme.id}`}
+      >
+        <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+          <button
+            className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#FFD700] focus-visible:outline-offset-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              openEditTheme(theme);
+            }}
+            aria-label={`Modifier le thème ${theme.name}`}
+            data-testid={`edit-theme-${theme.id}`}
+          >
+            <Pencil size={14} className="text-white" />
+          </button>
+          {theme.isCustom && (
+            <button
+              className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteTheme(theme);
+              }}
+              aria-label={`Supprimer le thème ${theme.name}`}
+              data-testid={`delete-theme-${theme.id}`}
+            >
+              <Trash2 size={14} className="text-white" />
+            </button>
+          )}
+        </div>
+
+        {/* Icon */}
+        <div 
+          className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+          style={{ 
+            background: `${theme.color}20`,
+            border: `2px solid ${theme.color}`,
+          }}
+        >
+          <Icon size={28} style={{ color: theme.color }} />
+        </div>
+
+        {/* Content */}
+        <h3 
+          className="font-bold font-['Chivo'] text-xl mb-1"
+          style={{ color: theme.color }}
+        >
+          {theme.name}
+        </h3>
+        <p className="text-[#D8D8E8] text-sm mb-3">
+          {theme.description}
+        </p>
+        
+        {/* Question count */}
+        <div className="flex items-center gap-2 text-xs text-[#B0B0C0]">
+          <Check size={14} style={{ color: theme.color }} />
+          <span>{theme.isCustom ? 'Thème personnalisé' : '15 questions prêtes'}</span>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <AnimatePresence initial={false}>
       <motion.div
@@ -140,96 +235,40 @@ export const ThemeSelector = ({ isOpen, onClose, onSelectTheme, onPlayTheme, onR
 
           {/* Themes grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {themes.map((theme, idx) => {
-              const Icon = ICON_MAP[theme.icon] || Brain;
-              
-              return (
-                <motion.div
-                  key={theme.id}
-                  className="theme-card relative overflow-hidden rounded-xl p-5 text-left transition-all border-2"
-                  style={{
-                    borderColor: `${theme.color}40`,
-                    backgroundColor: 'rgba(11, 11, 26, 0.85)',
-                    background: `linear-gradient(135deg, ${theme.color}15 0%, rgba(11, 11, 26, 0.8) 100%)`,
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleCardClick(theme)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleCardClick(theme);
-                    }
-                  }}
-                  initial={{ opacity: 1, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  whileHover={{ 
-                    scale: 1.03, 
-                    borderColor: theme.color,
-                    boxShadow: `0 0 30px ${theme.color}40`,
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  data-testid={`theme-${theme.id}`}
-                >
-                  <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-                    <button
-                      className="p-1.5 rounded-md bg-black/30 hover:bg-black/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#FFD700] focus-visible:outline-offset-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditTheme(theme);
-                      }}
-                      aria-label={`Modifier le thème ${theme.name}`}
-                      data-testid={`edit-theme-${theme.id}`}
-                    >
-                      <Pencil size={14} className="text-white" />
-                    </button>
-                    {theme.isCustom && (
-                      <button
-                        className="p-1.5 rounded-md bg-black/30 hover:bg-red-500/40 transition-colors focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTheme(theme);
-                        }}
-                        aria-label={`Supprimer le thème ${theme.name}`}
-                        data-testid={`delete-theme-${theme.id}`}
-                      >
-                        <Trash2 size={14} className="text-white" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Icon */}
-                  <div 
-                    className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-                    style={{ 
-                      background: `${theme.color}20`,
-                      border: `2px solid ${theme.color}`,
-                    }}
-                  >
-                    <Icon size={28} style={{ color: theme.color }} />
-                  </div>
-
-                  {/* Content */}
-                  <h3 
-                    className="font-bold font-['Chivo'] text-xl mb-1"
-                    style={{ color: theme.color }}
-                  >
-                    {theme.name}
-                  </h3>
-                  <p className="text-[#D8D8E8] text-sm mb-3">
-                    {theme.description}
-                  </p>
-                  
-                  {/* Question count */}
-                  <div className="flex items-center gap-2 text-xs text-[#B0B0C0]">
-                    <Check size={14} style={{ color: theme.color }} />
-                    <span>{theme.isCustom ? 'Thème personnalisé' : '15 questions prêtes'}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {generalThemes.map(renderThemeCard)}
           </div>
+
+          {adultThemes.length > 0 && (
+            <section
+              className="mt-6 rounded-xl border border-dashed border-red-400/45 p-4"
+              aria-labelledby="adult-themes-title"
+              data-testid="adult-themes-section"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 id="adult-themes-title" className="font-bold font-['Chivo'] text-lg text-white">
+                    Thèmes pour adultes ({adultThemes.length})
+                  </h3>
+                  <p className="text-sm text-[#B0B0C0]">Masqués par défaut pour les soirées en famille.</p>
+                </div>
+                <button
+                  type="button"
+                  className="min-h-[44px] px-4 rounded-lg border-2 border-red-400 text-red-300 font-semibold hover:bg-red-400/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#FFD700] focus-visible:outline-offset-2"
+                  onClick={() => setShowAdultThemes((shown) => !shown)}
+                  aria-expanded={showAdultThemes}
+                  aria-controls="adult-themes-grid"
+                  data-testid="toggle-adult-themes"
+                >
+                  {showAdultThemes ? 'Masquer' : 'Afficher'}
+                </button>
+              </div>
+              {showAdultThemes && (
+                <div id="adult-themes-grid" className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {adultThemes.map(renderThemeCard)}
+                </div>
+              )}
+            </section>
+          )}
 
           {editingTheme && (
             <div className="mt-6 p-4 rounded-lg bg-[#8B5CF6]/10 border border-[#8B5CF6]/30">

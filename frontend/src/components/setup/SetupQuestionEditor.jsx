@@ -22,7 +22,7 @@ export const SetupQuestionEditor = ({
         <h3 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
           Questions
         </h3>
-        <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+        <div className="space-y-1 max-h-[60vh] overflow-y-auto lg:max-h-none lg:overflow-visible">
           {questions.map((_, index) => {
             const status = getQuestionStatus(index);
             const isActive = currentEditIndex === index;

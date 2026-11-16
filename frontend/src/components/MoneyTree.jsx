@@ -20,7 +20,8 @@ const MoneyTreeBase = ({ currentLevel, highlightLevel = currentLevel, flash = nu
       
       <motion.div 
         data-testid="money-tree"
-        className={`money-tree-panel fixed lg:relative right-0 top-0 h-full w-64 p-4 z-50 lg:z-auto
+        className={`money-tree-panel fixed right-0 top-0 h-full w-64 p-4 z-50
+          lg:sticky lg:z-auto lg:h-screen lg:w-72 lg:shrink-0 lg:flex lg:flex-col lg:justify-center lg:overflow-y-auto
           ${isOpen ? 'open' : ''} 
           transition-transform duration-300 lg:transition-none`}
       >
