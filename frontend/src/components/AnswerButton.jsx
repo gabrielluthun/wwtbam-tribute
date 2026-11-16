@@ -46,7 +46,7 @@ const AnswerButtonBase = ({
   return (
     <motion.button
       data-testid={`answer-btn-${letter.toLowerCase()}`}
-      className={`${getStateClasses()} hexagon-btn w-full min-w-0 max-w-full py-4 lg:py-6 px-4 sm:px-6 lg:px-10 flex items-center gap-3 sm:gap-4 text-left ${disabled || concealed ? 'disabled' : ''} ${dimmed ? 'answer-btn--dimmed' : ''}`}
+      className={`${getStateClasses()} hexagon-btn w-full min-w-0 max-w-full py-4 px-4 sm:px-6 flex items-center gap-3 sm:gap-4 text-left ${disabled || concealed ? 'disabled' : ''} ${dimmed ? 'answer-btn--dimmed' : ''}`}
       onClick={() => !disabled && !concealed && state !== 'eliminated' && onClick(index)}
       disabled={disabled || concealed || state === 'eliminated'}
       initial={false}
@@ -64,7 +64,7 @@ const AnswerButtonBase = ({
       ) : (
         <motion.span
           key="answer-text"
-          className={`font-medium text-base sm:text-lg lg:text-[28px] lg:leading-tight flex-1 min-w-0 break-words ${wrongRevealBlink ? 'text-inherit' : 'text-white'}`}
+          className={`font-medium game-answer-text flex-1 min-w-0 break-words ${wrongRevealBlink ? 'text-inherit' : 'text-white'}`}
           initial={{ opacity: 0, x: -16, filter: 'blur(6px)' }}
           animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.45, ease: 'easeOut' }}

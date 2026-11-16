@@ -309,10 +309,13 @@ export const Game = () => {
 
       <div className="relative z-10 flex min-h-screen w-full max-w-full min-w-0 flex-col lg:flex-row">
         {/* Marge basse = hauteur de la barre mobile fixe, tant qu'elle est affichée (jusqu'à lg). */}
-        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 sm:p-6 lg:px-10 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
-          <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
-          <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+        {/* game-stage : conteneur de référence des tailles adaptatives (cqw + vh, cf. App.css « PLATEAU ADAPTATIF »). */}
+        <div className="game-stage flex min-w-0 w-full max-w-full flex-1 flex-col p-4 sm:p-6 lg:px-10 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
+          <div className="game-content mx-auto flex w-full max-w-5xl flex-1 flex-col">
+          {/* En-tête : dès xl (1280px) les jokers passent au centre de la ligne pour libérer de la hauteur.
+              En dessous (iPad paysage compris), la colonne de gauche serait trop étroite pour le volume et le chrono. */}
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-4 xl:mb-2 xl:flex-nowrap">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap xl:flex-1 xl:basis-0">
               <button
                 className="p-3 rounded-full transition-colors"
                 style={{ background: 'var(--top-btn-bg)' }}
@@ -370,53 +373,55 @@ export const Game = () => {
               {timerEnabled && showTimer && <TimerDisplay timeRemaining={timeRemaining} paused={isTimerOnHold} />}
             </div>
 
-            {gameMode === 'multi' && (
-              <div className="text-center ml-auto sm:ml-0">
-                <span className="text-[#B0B0C0] text-sm">Tour de</span>
-                <p className="text-[#FFD700] font-bold">{playerNames[currentPlayer]}</p>
-              </div>
-            )}
+            <div className="order-last w-full xl:order-none xl:w-auto">
+              <Jokers
+                usedJokers={usedJokers}
+                onFiftyFifty={handleFiftyFifty}
+                onPhoneFriend={handlePhoneFriend}
+                onAskAudience={handleAskAudience}
+                disabled={gameState !== GAME_STATES.PLAYING || !allAnswersRevealed}
+              />
+            </div>
 
-            <button
-              className="btn-secondary text-sm hidden lg:flex"
-              onClick={openWalkAwayConfirm}
-              disabled={gameState !== GAME_STATES.PLAYING}
-              data-testid="walk-away-btn"
-            >
-              Partir avec {currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'}
-            </button>
+            <div className="flex items-center justify-end gap-4 ml-auto xl:ml-0 xl:flex-1 xl:basis-0">
+              {gameMode === 'multi' && (
+                <div className="text-center">
+                  <span className="text-[#B0B0C0] text-sm">Tour de</span>
+                  <p className="text-[#FFD700] font-bold">{playerNames[currentPlayer]}</p>
+                </div>
+              )}
+
+              <button
+                className="btn-secondary text-sm hidden lg:flex"
+                onClick={openWalkAwayConfirm}
+                disabled={gameState !== GAME_STATES.PLAYING}
+                data-testid="walk-away-btn"
+              >
+                Partir avec {currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'}
+              </button>
+            </div>
           </div>
 
-          <div className="mb-6">
-            <Jokers
-              usedJokers={usedJokers}
-              onFiftyFifty={handleFiftyFifty}
-              onPhoneFriend={handlePhoneFriend}
-              onAskAudience={handleAskAudience}
-              disabled={gameState !== GAME_STATES.PLAYING || !allAnswersRevealed}
-            />
-          </div>
-
-          <div className="flex flex-1 flex-col lg:justify-center">
-          <div className="text-center mb-6">
+          <div className="flex flex-1 flex-col sm:justify-center">
+          <div className="text-center game-gap-after">
             <span className="text-[#00E5FF] text-sm lg:text-base uppercase tracking-wider">Question {currentLevel}</span>
-            <h2 className={`text-2xl sm:text-4xl lg:text-6xl font-bold lg:font-black font-['Chivo'] ${currentMoney.checkpoint ? 'text-[#00E5FF]' : 'text-[#FFD700]'} text-glow-gold`}>
+            <h2 className={`game-amount font-black font-['Chivo'] ${currentMoney.checkpoint ? 'text-[#00E5FF]' : 'text-[#FFD700]'} text-glow-gold`}>
               {currentMoney.display}
             </h2>
           </div>
 
           <motion.div
-            className="question-frame p-6 sm:p-8 lg:px-11 lg:py-9 mb-6 w-full"
+            className="question-frame game-gap-after w-full"
             key={currentLevel}
             initial={false}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-lg sm:text-2xl lg:text-[38px] lg:leading-tight text-center font-medium" style={{ color: 'var(--text-primary)' }} data-testid="question-text">
+            <p className="game-question-text text-center font-medium" style={{ color: 'var(--text-primary)' }} data-testid="question-text">
               {currentQuestion.question}
             </p>
           </motion.div>
 
-          <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-x-6 lg:gap-y-5 mb-6">
+          <div className="grid min-w-0 w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-x-6 lg:gap-y-5 game-gap-after">
             {(() => {
               const hasWrong = answerStates.some((s) => s === 'wrong');
               const isInteractive =
@@ -438,20 +443,20 @@ export const Game = () => {
             })()}
           </div>
 
-          {/* Emplacement de hauteur fixe sur grand écran : le bloc est centré verticalement, donc des
+          {/* Emplacement de hauteur fixe dès la tablette : le bloc est centré verticalement, donc des
               boutons de hauteur variable (révélation, dernier mot, verdict) le feraient sauter à chaque étape. */}
-          <div className="relative lg:h-28" data-testid="host-actions-slot">
+          <div className="relative sm:h-24" data-testid="host-actions-slot">
           <AnimatePresence>
             {gameState === GAME_STATES.PLAYING && !allAnswersRevealed && (
               <motion.div
-                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
+                className="host-reveal-bar flex flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 sm:absolute sm:inset-x-0 sm:top-0"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
               >
                 <button
                   type="button"
-                  className="btn-primary text-sm min-h-[44px] flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="btn-primary text-sm min-h-[44px] flex flex-1 sm:flex-none items-center justify-center gap-2"
                   onClick={handleRevealNextAnswer}
                   data-testid="reveal-next-answer-btn"
                 >
@@ -460,7 +465,7 @@ export const Game = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn-secondary text-sm min-h-[44px] w-full sm:w-auto"
+                  className="btn-secondary text-sm min-h-[44px] flex-1 sm:flex-none"
                   onClick={handleRevealAllAnswers}
                   data-testid="reveal-all-answers-btn"
                 >
@@ -473,7 +478,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.SELECTED && (
               <motion.div
-                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
+                className="flex flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 sm:absolute sm:inset-x-0 sm:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -499,7 +504,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.AWAITING_REVEAL && (
               <motion.div
-                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full lg:absolute lg:inset-x-0 lg:top-0"
+                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full sm:absolute sm:inset-x-0 sm:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}

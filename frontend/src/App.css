@@ -685,14 +685,6 @@ button {
   transform: none;
 }
 
-/* Grand écran / TV : lettres des réponses plus grandes, assorties au texte en 28 px. */
-@media (min-width: 1024px) {
-  .letter-badge {
-    width: 44px;
-    height: 44px;
-    font-size: 1.25rem;
-  }
-}
 
 .game-fixed-bg {
   position: fixed;
@@ -939,5 +931,111 @@ button {
 @media (min-width: 640px) and (max-width: 1023.98px) {
   .mobile-action-bar {
     display: flex;
+  }
+}
+
+/* ==========================================================================
+   PLATEAU ADAPTATIF — tailles pilotées par la largeur de la colonne de jeu (cqw)
+   ET la hauteur de l'écran (vh), pour tenir sans défilement du téléphone à la TV.
+   Repères (question / réponses / montant) :
+   - téléphone 390×844  : 20 / 16 / 28 px
+   - tablette 768×1024  : 29 / 21 / 47 px
+   - portable 1280×800  : 35 / 26 / 59 px  (1280×720 : 32 / 24 / 54)
+   - TV 1920×1080       : 48 / 36 / 81 px
+   Les variables sont déclarées sur .game-stage (le conteneur) et résolues chez ses enfants,
+   donc `cqw` se rapporte bien à la largeur de la colonne, pyramide exclue.
+   ========================================================================== */
+.game-stage {
+  container-type: inline-size;
+  --game-amount-size: clamp(1.75rem, min(6.5cqw, 7.5vh), 6.5rem);
+  --game-question-size: clamp(1.25rem, min(4cqw, 4.4vh), 3.5rem);
+  --game-answer-size: clamp(1rem, min(2.9cqw, 3.3vh), 2.75rem);
+  --game-badge-size: clamp(1.75rem, min(4cqw, 5vh), 3.5rem);
+  --game-gap: clamp(0.75rem, 2.2vh, 1.5rem);
+}
+
+.game-stage .game-amount {
+  font-size: var(--game-amount-size);
+  line-height: 1.05;
+}
+
+.game-stage .game-question-text {
+  font-size: var(--game-question-size);
+  line-height: 1.25;
+}
+
+.game-stage .game-gap-after {
+  margin-bottom: var(--game-gap);
+}
+
+.game-stage .question-frame {
+  padding: clamp(0.875rem, 3vh, 2.5rem) clamp(1rem, 3cqw, 3rem);
+}
+
+.game-stage .answer-btn.hexagon-btn {
+  /* min(…, 2.5cqw) : cases plus compactes sur téléphone pour que « dernier mot » tienne sans défiler. */
+  padding-block: clamp(0.625rem, min(2vh, 2.5cqw), 1.5rem);
+  padding-inline: clamp(1rem, 3cqw, 2.75rem);
+  gap: clamp(0.625rem, 1.2cqw, 1.25rem);
+}
+
+.game-stage .game-answer-text {
+  font-size: var(--game-answer-size);
+  line-height: 1.2;
+}
+
+.game-stage .letter-badge {
+  width: var(--game-badge-size);
+  height: var(--game-badge-size);
+  font-size: calc(var(--game-badge-size) * 0.45);
+}
+
+/* TV / grand écran haut (1080p et plus) : plateau plus large, jokers et pyramide agrandis. */
+@media (min-width: 1536px) and (min-height: 1000px) {
+  .game-stage .game-content {
+    max-width: 88rem;
+  }
+
+  .game-stage .joker-btn {
+    width: 72px;
+    height: 72px;
+  }
+
+  .money-tree-panel {
+    width: 22rem;
+  }
+
+  .money-tree-panel h3 {
+    font-size: 1.5rem;
+  }
+
+  .money-tree-panel [data-testid^='money-level-'] {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .money-tree-panel [data-testid^='money-level-'] span {
+    font-size: 1.25rem;
+  }
+}
+
+/* Écrans tactiles en mise en page grand écran (iPad paysage, écran tactile) : cibles de 44px minimum
+   pour les lignes de la pyramide, la liste des questions et « Partir avec ». */
+@media (pointer: coarse) {
+  .money-tree-panel [data-testid^='money-level-'],
+  [data-testid^='question-nav-'],
+  [data-testid='walk-away-btn'] {
+    min-height: 44px;
+  }
+
+  /* Fenêtre des thèmes : croix de fermeture et boutons crayon / corbeille des cartes. */
+  [data-testid='close-theme-selector'],
+  [data-testid^='edit-theme-'],
+  [data-testid^='delete-theme-'] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }

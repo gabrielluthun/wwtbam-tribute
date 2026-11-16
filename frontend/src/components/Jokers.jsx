@@ -56,7 +56,8 @@ const JokersBase = ({
               className={joker.used || disabled ? 'text-gray-500' : 'text-[#00E5FF]'}
             />
           </motion.button>
-          <span className={`text-sm font-semibold tracking-wide ${joker.used || disabled ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
+          {/* Téléphone : libellé masqué visuellement (icônes explicites, aria-label sur le bouton) pour gagner de la hauteur. */}
+          <span className={`max-sm:sr-only text-sm font-semibold tracking-wide ${joker.used || disabled ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
             {joker.label}
           </span>
         </div>
