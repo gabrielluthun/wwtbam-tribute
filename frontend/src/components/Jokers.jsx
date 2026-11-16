@@ -40,7 +40,7 @@ const JokersBase = ({
           <motion.button
             type="button"
             data-testid={`joker-${joker.id}`}
-            className={`joker-btn ${joker.used ? 'used' : ''}`}
+            className={`joker-btn ${joker.used ? 'used' : ''} ${disabled && !joker.used ? 'unavailable' : ''}`}
             onClick={() => !joker.used && !disabled && joker.onClick()}
             disabled={joker.used || disabled}
             initial={{ opacity: 0, y: -20 }}
@@ -53,10 +53,10 @@ const JokersBase = ({
           >
             <joker.icon 
               size={24} 
-              className={joker.used ? 'text-gray-500' : 'text-[#00E5FF]'} 
+              className={joker.used || disabled ? 'text-gray-500' : 'text-[#00E5FF]'}
             />
           </motion.button>
-          <span className={`text-xs font-semibold tracking-wide ${joker.used ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
+          <span className={`text-xs font-semibold tracking-wide ${joker.used || disabled ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
             {joker.label}
           </span>
         </div>
