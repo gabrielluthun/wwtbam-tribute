@@ -1,8 +1,25 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock } from 'lucide-react';
+import { Clock, Pause } from 'lucide-react';
 
-const TimerDisplayBase = ({ timeRemaining }) => {
+/**
+ * @param paused réponse choisie ou verrouillée : le décompte est figé, on l'affiche clairement
+ *   plutôt que de laisser un chiffre immobile qui ressemble à un bug.
+ */
+const TimerDisplayBase = ({ timeRemaining, paused = false }) => {
+  if (paused) {
+    return (
+      <div
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-[#B0B0C0]"
+        data-testid="timer-display"
+        data-paused="true"
+      >
+        <Pause size={18} />
+        <span className="font-semibold text-base">En pause</span>
+      </div>
+    );
+  }
+
   const isWarning = timeRemaining <= 10;
   const isCritical = timeRemaining <= 5;
 
@@ -27,6 +44,6 @@ const TimerDisplayBase = ({ timeRemaining }) => {
 
 /**
  * Mémoisation : seul composant qui *doit* re-render à chaque seconde.
- * `timeRemaining` est la seule prop, on isole donc le tick ici.
+ * Props primitives (`timeRemaining`, `paused`), on isole donc le tick ici.
  */
 export const TimerDisplay = memo(TimerDisplayBase);
