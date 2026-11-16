@@ -665,6 +665,35 @@ button {
   padding: 0.625rem 0.875rem;
 }
 
+/* Grand écran : « Partir avec » est dans l'en-tête et la pyramide est visible, la barre du bas ferait doublon.
+   (Défini ici car `display: flex` ci-dessus écrase la classe Tailwind `lg:hidden`.) */
+@media (min-width: 1024px) {
+  .mobile-action-bar {
+    display: none;
+  }
+}
+
+/* Joker momentanément indisponible (réponses pas encore affichées, réponse verrouillée, verdict). */
+.joker-btn.unavailable {
+  opacity: 0.35;
+  border-color: rgba(176, 176, 192, 0.35);
+  cursor: not-allowed;
+}
+
+.joker-btn.unavailable:hover {
+  border-color: rgba(176, 176, 192, 0.35);
+  transform: none;
+}
+
+/* Grand écran / TV : lettres des réponses plus grandes, assorties au texte en 28 px. */
+@media (min-width: 1024px) {
+  .letter-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+}
+
 .game-fixed-bg {
   position: fixed;
   inset: 0;
