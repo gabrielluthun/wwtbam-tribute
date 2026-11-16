@@ -308,12 +308,13 @@ export const Game = () => {
       {showCheckpointConfetti && <Confetti mode="burst" burstKey={currentLevel} />}
 
       <div className="relative z-10 flex min-h-screen w-full max-w-full min-w-0 flex-col lg:flex-row">
-        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 sm:p-6 lg:px-10">
+        {/* Marge basse = hauteur de la barre mobile fixe, tant qu'elle est affichée (jusqu'à lg). */}
+        <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 sm:p-6 lg:px-10 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
           <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
           <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <button
-                className="p-2 rounded-full transition-colors"
+                className="p-3 rounded-full transition-colors"
                 style={{ background: 'var(--top-btn-bg)' }}
                 onClick={openHomeConfirm}
                 aria-label="Retour à l'accueil"
@@ -327,7 +328,7 @@ export const Game = () => {
               >
                 <button
                   type="button"
-                  className="p-2 rounded-full shrink-0 transition-colors"
+                  className="p-3 rounded-full shrink-0 transition-colors"
                   style={{ background: 'var(--top-btn-bg)' }}
                   onClick={toggleMute}
                   data-testid="mute-btn"
@@ -450,7 +451,7 @@ export const Game = () => {
               >
                 <button
                   type="button"
-                  className="btn-primary text-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="btn-primary text-sm min-h-[44px] flex items-center justify-center gap-2 w-full sm:w-auto"
                   onClick={handleRevealNextAnswer}
                   data-testid="reveal-next-answer-btn"
                 >
@@ -459,7 +460,7 @@ export const Game = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn-secondary text-sm w-full sm:w-auto"
+                  className="btn-secondary text-sm min-h-[44px] w-full sm:w-auto"
                   onClick={handleRevealAllAnswers}
                   data-testid="reveal-all-answers-btn"
                 >
@@ -478,14 +479,14 @@ export const Game = () => {
                 exit={{ opacity: 0, y: 20 }}
               >
                 <button
-                  className="btn-secondary flex-1 w-full sm:w-auto"
+                  className="btn-secondary min-h-[44px] flex-1 w-full sm:w-auto"
                   onClick={handleCancelSelection}
                   data-testid="cancel-answer-btn"
                 >
                   Annuler
                 </button>
                 <button
-                  className="btn-primary flex-1 w-full sm:w-auto text-sm sm:text-base py-3 sm:py-4 leading-tight"
+                  className="btn-primary min-h-[44px] flex-1 w-full sm:w-auto text-sm sm:text-base py-3 sm:py-4 leading-tight"
                   onClick={handleConfirmAnswer}
                   data-testid="confirm-answer-btn"
                 >
