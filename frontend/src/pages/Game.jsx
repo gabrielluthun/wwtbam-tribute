@@ -9,8 +9,7 @@ import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers
 import { TimerDisplay } from '../components/TimerDisplay';
 import { StageLighting } from '../components/stage/StageLighting';
 import { Confetti } from '../components/stage/Confetti';
-import { AnimatedAmount, formatEuro } from '../components/stage/AnimatedAmount';
-import { MONEY_LEVELS, ANSWER_LETTERS } from '../utils/gameData';
+import { MONEY_LEVELS, ANSWER_LETTERS, formatEuro } from '../utils/gameData';
 import { useGame } from '../hooks/useGame';
 import { GAME_STATES } from '../game/gameConstants';
 
@@ -185,7 +184,7 @@ export const Game = () => {
   if (gameState === GAME_STATES.LOST || gameState === GAME_STATES.WON || gameState === GAME_STATES.MILLION || gameState === GAME_STATES.TIMEOUT) {
     const validatedAmount = currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].amount : 0;
     const isLoss = gameState === GAME_STATES.LOST || gameState === GAME_STATES.TIMEOUT;
-    // Gain : le compteur monte depuis 0. Perte : il chute du montant acquis vers le palier garanti.
+    // amountTo : gain final. amountFrom : montant acquis avant l'erreur (affiché barré en cas de perte).
     let amountFrom = 0;
     let amountTo = guaranteedMoney.amount;
     if (gameState === GAME_STATES.MILLION) amountTo = MONEY_LEVELS[14].amount;
@@ -247,14 +246,12 @@ export const Game = () => {
             </>
           )}
 
-          <AnimatedAmount
-            from={amountFrom}
-            to={amountTo}
-            durationMs={gameState === GAME_STATES.MILLION ? 3000 : 1800}
-            delayMs={isLoss ? 900 : 300}
+          <span
             className={`block max-w-full text-6xl sm:text-8xl lg:text-[168px] leading-none font-black font-['Chivo'] text-[#FFD700] text-glow-gold tabular-nums break-words ${showsDrop ? 'mb-4' : 'mb-10'}`}
             data-testid="final-amount"
-          />
+          >
+            {formatEuro(amountTo)}
+          </span>
           {showsDrop && (
             <p className="text-[#D6D6E2] text-base sm:text-xl lg:text-2xl mb-10" data-testid="lost-amount">
               au lieu de <span className="line-through decoration-[#FF5A5A] decoration-[3px]">{formatEuro(amountFrom)}</span>
@@ -597,19 +594,7 @@ export const Game = () => {
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8 }}
               >
-                Pour{' '}
-                {gameState === GAME_STATES.TRANSITION ? (
-                  <AnimatedAmount
-                    key={overlayLevel}
-                    from={MONEY_LEVELS[overlayLevel - 2]?.amount ?? 0}
-                    to={overlayMoney.amount}
-                    durationMs={1400}
-                    delayMs={350}
-                    className="tabular-nums"
-                  />
-                ) : (
-                  overlayMoney.display
-                )}
+                {`Pour ${overlayMoney.display}`}
               </motion.h1>
               {overlayMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
                 <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">
