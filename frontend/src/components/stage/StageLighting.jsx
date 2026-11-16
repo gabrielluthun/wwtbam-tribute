@@ -3,19 +3,37 @@ import { motion } from 'framer-motion';
 
 /**
  * Lumière de plateau posée entre le fond studio et l'interface.
- * - Plus l'enjeu monte (niveau 1 → 15), plus la salle s'assombrit et se resserre sur la question,
- *   et les faisceaux virent du cyan au violet.
+ * - Q1–Q5 : salle à peine voilée. À partir de Q6, l'obscurité croît de façon exponentielle
+ *   jusqu'au quasi-noir en Q15 ; les faisceaux virent du cyan au violet.
  * - `phase` : 'idle' | 'tension' (réponse verrouillée) | 'correct' | 'wrong' (verdict).
  */
 const lerp = (a, b, t) => Math.round(a + (b - a) * t);
 
+/** Niveau à partir duquel la salle commence vraiment à s'assombrir. */
+const DARKENING_START_LEVEL = 6;
+/** Courbure de l'exponentielle (plus grand = plus lent au début, plus brutal à la fin). */
+const DARKENING_CURVE = 3;
+
+/**
+ * 0 sur Q1–Q5, puis croissance exponentielle de Q6 (≈ 0) à Q15 (= 1).
+ * Q6 ≈ 0 · Q10 ≈ 0.15 · Q12 ≈ 0.33 · Q14 ≈ 0.70 · Q15 = 1
+ */
+function darkeningCurve(level) {
+  const span = 15 - DARKENING_START_LEVEL;
+  const x = Math.min(1, Math.max(0, (level - DARKENING_START_LEVEL) / span));
+  return (Math.exp(DARKENING_CURVE * x) - 1) / (Math.exp(DARKENING_CURVE) - 1);
+}
+
 const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
   const stake = Math.min(1, Math.max(0, (level - 1) / 14));
+  const dark = darkeningCurve(level);
   const tension = phase === 'tension';
 
-  const darkness = Math.min(0.75, 0.1 + 0.4 * stake + (tension ? 0.2 : 0));
-  const vignette = Math.min(1, 0.35 + 0.45 * stake + (tension ? 0.3 : 0));
-  const beamsOpacity = tension ? 0.15 : 0.9 - 0.4 * stake;
+  // Très léger (8 %) jusqu'à Q6, quasi noir (92 %) en Q15 ; la tension ajoute une marche.
+  const darkness = Math.min(0.96, 0.08 + 0.84 * dark + (tension ? 0.15 : 0));
+  const vignette = Math.min(1, 0.3 + 0.7 * dark + (tension ? 0.3 : 0));
+  // Les faisceaux restent visibles dans le noir : ils deviennent les seules sources de lumière.
+  const beamsOpacity = tension ? 0.15 : 0.85;
   const beamColor = `${lerp(0, 170, stake)}, ${lerp(229, 90, stake)}, 255`;
   const spotColor = tension ? '255, 215, 0' : '120, 200, 255';
 
@@ -43,7 +61,7 @@ const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
         style={{
           background: `radial-gradient(ellipse 55% 38% at 50% 40%, rgba(${spotColor}, 0.16) 0%, rgba(${spotColor}, 0.05) 45%, transparent 75%)`,
         }}
-        animate={{ opacity: tension ? 1 : 0.55 + 0.45 * stake }}
+        animate={{ opacity: tension ? 1 : 0.55 + 0.45 * dark }}
         transition={{ duration: 1 }}
       />
 
