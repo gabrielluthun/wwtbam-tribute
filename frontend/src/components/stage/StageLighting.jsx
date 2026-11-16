@@ -11,17 +11,22 @@ const lerp = (a, b, t) => Math.round(a + (b - a) * t);
 
 /** Niveau à partir duquel la salle commence vraiment à s'assombrir. */
 const DARKENING_START_LEVEL = 6;
+/** Marche franche dès l'entrée en Q6 (part de la courbe déjà acquise). */
+const DARKENING_START_AMOUNT = 0.18;
 /** Courbure de l'exponentielle (plus grand = plus lent au début, plus brutal à la fin). */
-const DARKENING_CURVE = 3;
+const DARKENING_CURVE = 1.2;
 
 /**
- * 0 sur Q1–Q5, puis croissance exponentielle de Q6 (≈ 0) à Q15 (= 1).
- * Q6 ≈ 0 · Q10 ≈ 0.15 · Q12 ≈ 0.33 · Q14 ≈ 0.70 · Q15 = 1
+ * 0 sur Q1–Q5, marche en Q6 puis croissance exponentielle jusqu'à 1 en Q15.
+ * Obscurité du fond qui en résulte :
+ * Q5 8 % · Q6 23 % · Q8 32 % · Q10 44 % · Q11 51 % · Q12 60 % · Q13 69 % · Q14 80 % · Q15 92 %
  */
 function darkeningCurve(level) {
+  if (level < DARKENING_START_LEVEL) return 0;
   const span = 15 - DARKENING_START_LEVEL;
-  const x = Math.min(1, Math.max(0, (level - DARKENING_START_LEVEL) / span));
-  return (Math.exp(DARKENING_CURVE * x) - 1) / (Math.exp(DARKENING_CURVE) - 1);
+  const x = Math.min(1, (level - DARKENING_START_LEVEL) / span);
+  const curve = (Math.exp(DARKENING_CURVE * x) - 1) / (Math.exp(DARKENING_CURVE) - 1);
+  return DARKENING_START_AMOUNT + (1 - DARKENING_START_AMOUNT) * curve;
 }
 
 const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
@@ -29,7 +34,7 @@ const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
   const dark = darkeningCurve(level);
   const tension = phase === 'tension';
 
-  // Très léger (8 %) jusqu'à Q6, quasi noir (92 %) en Q15 ; la tension ajoute une marche.
+  // Très léger (8 %) sur Q1–Q5, bien voilé dès Q11, quasi noir (92 %) en Q15 ; la tension ajoute une marche.
   const darkness = Math.min(0.96, 0.08 + 0.84 * dark + (tension ? 0.15 : 0));
   const vignette = Math.min(1, 0.3 + 0.7 * dark + (tension ? 0.3 : 0));
   // Les faisceaux restent visibles dans le noir : ils deviennent les seules sources de lumière.
