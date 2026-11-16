@@ -441,10 +441,13 @@ export const Game = () => {
             })()}
           </div>
 
+          {/* Emplacement de hauteur fixe sur grand écran : le bloc est centré verticalement, donc des
+              boutons de hauteur variable (révélation, dernier mot, verdict) le feraient sauter à chaque étape. */}
+          <div className="relative lg:h-28" data-testid="host-actions-slot">
           <AnimatePresence>
             {gameState === GAME_STATES.PLAYING && !allAnswersRevealed && (
               <motion.div
-                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
+                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
@@ -473,7 +476,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.SELECTED && (
               <motion.div
-                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
+                className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1 lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -499,7 +502,7 @@ export const Game = () => {
           <AnimatePresence>
             {gameState === GAME_STATES.AWAITING_REVEAL && (
               <motion.div
-                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full"
+                className="flex flex-col items-center gap-3 max-w-md mx-auto w-full lg:absolute lg:inset-x-0 lg:top-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -529,6 +532,7 @@ export const Game = () => {
             >
             </motion.div>
           )}
+          </div>
           </div>
           </div>
         </div>
