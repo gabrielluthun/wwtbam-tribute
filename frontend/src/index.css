@@ -285,7 +285,8 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-appearance: none;
   appearance: none;
   width: 7.5rem;
-  height: 1.35rem;
+  /* Zone tactile de 44px ; la piste visible reste fine (8px) et centrée. */
+  height: 2.75rem;
   background: transparent;
   cursor: pointer;
 }
