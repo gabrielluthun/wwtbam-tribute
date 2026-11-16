@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX, Home, RotateCcw, Clock, Eye } from 'lucide-react';
 import { AnswerButton } from '../components/AnswerButton';
@@ -7,13 +7,24 @@ import { MoneyTree } from '../components/MoneyTree';
 import { ConfirmActionModal } from '../components/ConfirmActionModal';
 import { Jokers, PhoneFriendDialog, AudienceResults } from '../components/Jokers';
 import { TimerDisplay } from '../components/TimerDisplay';
-import { MONEY_LEVELS } from '../utils/gameData';
+import { StageLighting } from '../components/stage/StageLighting';
+import { Confetti } from '../components/stage/Confetti';
+import { AnimatedAmount, formatEuro } from '../components/stage/AnimatedAmount';
+import { MONEY_LEVELS, ANSWER_LETTERS } from '../utils/gameData';
 import { useGame } from '../hooks/useGame';
 import { GAME_STATES } from '../game/gameConstants';
 
 /** Boutons d’action sur l’overlay intro / transition (même style). */
 const OVERLAY_CTA_CLASSES =
   'btn-primary mt-10 px-8 py-3 text-base sm:text-lg font-bold shadow-[0_0_24px_rgba(255,215,0,0.35)] border border-[#FFD700]/50 transition-none';
+
+/** Touches qui font « avancer le show » (Espace + télécommandes de présentation). */
+const ADVANCE_KEYS = new Set([' ', 'Spacebar', 'ArrowRight', 'PageDown']);
+
+function isTypingTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
 
 export const Game = () => {
   const navigate = useNavigate();
@@ -29,6 +40,10 @@ export const Game = () => {
     audienceResults,
     audienceMessage,
     showAudienceDialog,
+    revealedCount,
+    allAnswersRevealed,
+    handleRevealNextAnswer,
+    handleRevealAllAnswers,
     timerEnabled,
     timeRemaining,
     isAwaitingNextQuestionClick,
@@ -94,6 +109,65 @@ export const Game = () => {
     : `Vous allez repartir avec ${currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €'}.`;
   const confirmButtonLabel = confirmAction === 'home' ? 'Oui, quitter' : 'Oui, partir';
 
+  // --- Immersion : phase de lumière, pyramide au verdict, confettis de palier ---
+  const hasWrongAnswer = answerStates.includes('wrong');
+  const isVerdictCorrect =
+    answerStates.includes('correct') &&
+    !hasWrongAnswer &&
+    (gameState === GAME_STATES.REVEALING || gameState === GAME_STATES.TRANSITION);
+  const isAnswerLocked =
+    gameState === GAME_STATES.AWAITING_REVEAL || gameState === GAME_STATES.REVEALING;
+
+  let stagePhase = 'idle';
+  if (hasWrongAnswer || gameState === GAME_STATES.TIMEOUT) stagePhase = 'wrong';
+  else if (isVerdictCorrect) stagePhase = 'correct';
+  else if (isAnswerLocked) stagePhase = 'tension';
+
+  let moneyTreeHighlight = currentLevel;
+  if (isVerdictCorrect) moneyTreeHighlight = Math.min(currentLevel + 1, MONEY_LEVELS.length);
+  else if (hasWrongAnswer) moneyTreeHighlight = guaranteedMoney.level;
+
+  const moneyTreeFlashKind = isVerdictCorrect ? 'won' : hasWrongAnswer ? 'lost' : null;
+  const moneyTreeFlash = useMemo(
+    () => (moneyTreeFlashKind ? { level: currentLevel, kind: moneyTreeFlashKind } : null),
+    [moneyTreeFlashKind, currentLevel],
+  );
+
+  const showCheckpointConfetti =
+    isVerdictCorrect && Boolean(currentMoney?.checkpoint) && currentLevel < MONEY_LEVELS.length;
+
+  // --- Pilotage clavier : Espace / → / télécommande font avancer le show ---
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (!ADVANCE_KEYS.has(event.key) || event.repeat || isTypingTarget(event.target)) return;
+      if (confirmAction || showPhoneDialog || showAudienceDialog || showMoneyTree) return;
+
+      let handled = true;
+      if (gameState === GAME_STATES.PLAYING && !allAnswersRevealed) handleRevealNextAnswer();
+      else if (gameState === GAME_STATES.AWAITING_REVEAL) handleRevealAnswer();
+      else if (gameState === GAME_STATES.TRANSITION && isAwaitingNextQuestionClick) handleContinueToNextQuestion();
+      else if (gameState === GAME_STATES.INTRO && showIntroStartButton) handleBeginIntroGame();
+      else handled = false;
+
+      if (handled) event.preventDefault();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    confirmAction,
+    showPhoneDialog,
+    showAudienceDialog,
+    showMoneyTree,
+    gameState,
+    allAnswersRevealed,
+    isAwaitingNextQuestionClick,
+    showIntroStartButton,
+    handleRevealNextAnswer,
+    handleRevealAnswer,
+    handleContinueToNextQuestion,
+    handleBeginIntroGame,
+  ]);
+
   if (!currentQuestion) {
     return (
       <div className="min-h-screen relative w-full max-w-full overflow-x-hidden flex items-center justify-center">
@@ -105,16 +179,22 @@ export const Game = () => {
   }
 
   if (gameState === GAME_STATES.LOST || gameState === GAME_STATES.WON || gameState === GAME_STATES.MILLION || gameState === GAME_STATES.TIMEOUT) {
-    const winAmount = gameState === GAME_STATES.MILLION
-      ? MONEY_LEVELS[14].display
-      : gameState === GAME_STATES.WON
-        ? (currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].display : '0 €')
-        : guaranteedMoney.display;
+    const validatedAmount = currentLevel > 1 ? MONEY_LEVELS[currentLevel - 2].amount : 0;
+    const isLoss = gameState === GAME_STATES.LOST || gameState === GAME_STATES.TIMEOUT;
+    // Gain : le compteur monte depuis 0. Perte : il chute du montant acquis vers le palier garanti.
+    let amountFrom = 0;
+    let amountTo = guaranteedMoney.amount;
+    if (gameState === GAME_STATES.MILLION) amountTo = MONEY_LEVELS[14].amount;
+    else if (gameState === GAME_STATES.WON) amountTo = validatedAmount;
+    else amountFrom = validatedAmount;
+    const showsDrop = isLoss && amountFrom !== amountTo;
 
     return (
       <div className="min-h-screen relative w-full max-w-full overflow-x-hidden flex items-center justify-center p-6">
         <div className="game-fixed-bg" />
-        <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
+        <StageLighting level={currentLevel} phase={isLoss ? 'wrong' : 'correct'} />
+        {gameState === GAME_STATES.MILLION && <Confetti mode="rain" count={220} />}
+        {gameState === GAME_STATES.WON && amountTo > 0 && <Confetti mode="burst" burstKey={currentLevel} />}
 
         <motion.div
           className={`relative z-10 glass rounded-2xl p-5 sm:p-8 max-w-lg w-full min-w-0 max-h-[min(90dvh,90vh)] overflow-y-auto text-center border ${
@@ -167,9 +247,19 @@ export const Game = () => {
             </>
           )}
 
-          <p className="text-4xl font-black font-['Chivo'] text-[#FFD700] mb-8 text-glow-gold">
-            {winAmount}
-          </p>
+          <AnimatedAmount
+            from={amountFrom}
+            to={amountTo}
+            durationMs={gameState === GAME_STATES.MILLION ? 3000 : 1800}
+            delayMs={isLoss ? 900 : 300}
+            className={`block text-4xl font-black font-['Chivo'] text-[#FFD700] text-glow-gold tabular-nums ${showsDrop ? 'mb-2' : 'mb-8'}`}
+            data-testid="final-amount"
+          />
+          {showsDrop && (
+            <p className="text-[#B0B0C0] text-sm mb-8" data-testid="lost-amount">
+              au lieu de <span className="line-through decoration-[#D32F2F] decoration-2">{formatEuro(amountFrom)}</span>
+            </p>
+          )}
 
           {gameMode === 'multi' && (
             <div className="mb-6 p-4 bg-white/5 rounded-lg">
@@ -217,7 +307,8 @@ export const Game = () => {
   return (
     <div className="min-h-screen relative w-full max-w-full overflow-x-hidden">
       <div className="game-fixed-bg" />
-      <div className="absolute inset-0 max-w-full" style={{ background: 'var(--overlay-screen)' }} />
+      <StageLighting level={currentLevel} phase={stagePhase} />
+      {showCheckpointConfetti && <Confetti mode="burst" burstKey={currentLevel} />}
 
       <div className="relative z-10 flex min-h-screen w-full max-w-full min-w-0 flex-col lg:flex-row">
         <div className="flex min-w-0 w-full max-w-full flex-1 flex-col p-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 sm:p-6 lg:pr-72">
@@ -303,7 +394,7 @@ export const Game = () => {
               onFiftyFifty={handleFiftyFifty}
               onPhoneFriend={handlePhoneFriend}
               onAskAudience={handleAskAudience}
-              disabled={gameState !== GAME_STATES.PLAYING}
+              disabled={gameState !== GAME_STATES.PLAYING || !allAnswersRevealed}
             />
           </div>
 
@@ -340,10 +431,41 @@ export const Game = () => {
                   disabled={!isInteractive}
                   audiencePercent={audienceResults ? audienceResults[index] : undefined}
                   wrongOutcomeReveal={answerStates[index] === 'correct' && hasWrong}
+                  concealed={index >= revealedCount}
+                  dimmed={isAnswerLocked && answerStates[index] === 'default'}
                 />
               ));
             })()}
           </div>
+
+          <AnimatePresence>
+            {gameState === GAME_STATES.PLAYING && !allAnswersRevealed && (
+              <motion.div
+                className="host-reveal-bar flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto w-full min-w-0 px-1"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+              >
+                <button
+                  type="button"
+                  className="btn-primary text-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+                  onClick={handleRevealNextAnswer}
+                  data-testid="reveal-next-answer-btn"
+                >
+                  Afficher la réponse {ANSWER_LETTERS[revealedCount]}
+                  <kbd className="hidden sm:inline-block">Espace</kbd>
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary text-sm w-full sm:w-auto"
+                  onClick={handleRevealAllAnswers}
+                  data-testid="reveal-all-answers-btn"
+                >
+                  Tout afficher
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {gameState === GAME_STATES.SELECTED && (
@@ -389,8 +511,8 @@ export const Game = () => {
                   <Eye size={20} />
                   Révéler la réponse
                 </motion.button>
-                <p className="text-[#FFD700] text-xs uppercase tracking-widest text-center">
-                  Prêt pour le verdict ?
+                <p className="host-reveal-bar text-[#FFD700] text-xs uppercase tracking-widest text-center">
+                  Prêt pour le verdict ? <kbd className="hidden sm:inline-block normal-case text-[#FFD700]">Espace</kbd>
                 </p>
               </motion.div>
             )}
@@ -408,6 +530,8 @@ export const Game = () => {
 
         <MoneyTree
           currentLevel={currentLevel}
+          highlightLevel={moneyTreeHighlight}
+          flash={moneyTreeFlash}
           isOpen={showMoneyTree}
           onClose={closeMoneyTree}
           onSelectLevel={handleSelectMoneyLevel}
@@ -465,7 +589,19 @@ export const Game = () => {
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8 }}
               >
-                {`Pour ${overlayMoney.display}`}
+                Pour{' '}
+                {gameState === GAME_STATES.TRANSITION ? (
+                  <AnimatedAmount
+                    key={overlayLevel}
+                    from={MONEY_LEVELS[overlayLevel - 2]?.amount ?? 0}
+                    to={overlayMoney.amount}
+                    durationMs={1400}
+                    delayMs={350}
+                    className="tabular-nums"
+                  />
+                ) : (
+                  overlayMoney.display
+                )}
               </motion.h1>
               {overlayMoney.checkpoint && gameState === GAME_STATES.TRANSITION && (
                 <p className="text-[#00E5FF] text-sm sm:text-base mt-6 uppercase tracking-widest">
