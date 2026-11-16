@@ -258,7 +258,6 @@ export const Game = () => {
           {showsDrop && (
             <p className="text-[#D6D6E2] text-base sm:text-xl lg:text-2xl mb-10" data-testid="lost-amount">
               au lieu de <span className="line-through decoration-[#FF5A5A] decoration-[3px]">{formatEuro(amountFrom)}</span>
-              {guaranteedMoney.level > 0 && `, grâce au palier de la question ${guaranteedMoney.level}`}
             </p>
           )}
 
