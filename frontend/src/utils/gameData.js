@@ -180,6 +180,10 @@ export const generateAudienceResults = (correctIndex, eliminatedIndexes = [], qu
 // Answer letters
 export const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
 
+/** Même format que `MONEY_LEVELS[].display` : « 1 500 € ». */
+export const formatEuro = (amount) =>
+  `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} €`;
+
 // Default empty question template
 export const createEmptyQuestion = (index) => ({
   id: `q-${index}`,
