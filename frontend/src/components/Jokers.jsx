@@ -56,7 +56,7 @@ const JokersBase = ({
               className={joker.used || disabled ? 'text-gray-500' : 'text-[#00E5FF]'}
             />
           </motion.button>
-          <span className={`text-xs font-semibold tracking-wide ${joker.used || disabled ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
+          <span className={`text-sm font-semibold tracking-wide ${joker.used || disabled ? 'text-gray-600' : 'text-[#B0B0C0]'}`}>
             {joker.label}
           </span>
         </div>

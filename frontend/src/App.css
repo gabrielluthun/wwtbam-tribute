@@ -171,7 +171,7 @@
   align-items: center;
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -795,7 +795,7 @@ button {
   background: rgba(0, 0, 0, 0.08);
   opacity: 0.75;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-align: center;
 }
@@ -830,8 +830,10 @@ button {
 /* ==========================================================================
    RESPONSIVE — ajustements tablette/mobile
    ========================================================================== */
-/* Responsive adjustments */
-@media (max-width: 1024px) {
+/* Responsive adjustments
+   1023.98px et non 1024px : Tailwind `lg:` démarre à 1024px. Avec 1024px ici, un iPad en paysage
+   (1024px pile) cumulait la mise en page grand écran ET le tiroir / la barre mobile. */
+@media (max-width: 1023.98px) {
   .money-tree-panel {
     position: fixed;
     right: 0;
@@ -934,7 +936,7 @@ button {
   }
 }
 
-@media (min-width: 640px) and (max-width: 1024px) {
+@media (min-width: 640px) and (max-width: 1023.98px) {
   .mobile-action-bar {
     display: flex;
   }

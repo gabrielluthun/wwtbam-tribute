@@ -22,7 +22,7 @@ export const SetupHeader = ({
   <div className="mb-6 space-y-4">
     <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
       <button
-        className="flex items-center gap-2 text-[#B0B0C0] hover:text-white transition-colors"
+        className="flex items-center gap-2 min-h-[44px] pr-2 text-[#B0B0C0] hover:text-white transition-colors"
         onClick={onBack}
         data-testid="back-btn"
       >
@@ -75,7 +75,7 @@ export const SetupHeader = ({
     <div className="glass-light rounded-lg p-3 sm:p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <button
-          className={`btn-secondary flex items-center justify-center gap-2 text-sm ${
+          className={`btn-secondary flex items-center justify-center gap-2 text-sm min-h-[44px] ${
             !themeStepCompleted ? 'border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700]/10' : ''
           }`}
           onClick={onOpenThemeSelector}
@@ -85,7 +85,7 @@ export const SetupHeader = ({
           Choisir un thème pré-conçu
         </button>
         <button
-          className="btn-secondary flex items-center justify-center gap-2 text-sm"
+          className="btn-secondary flex items-center justify-center gap-2 text-sm min-h-[44px]"
           onClick={onOpenSaveThemeModal}
           data-testid="save-theme-btn"
         >
@@ -93,7 +93,7 @@ export const SetupHeader = ({
           Enregistrer ce thème personnalisé
         </button>
         <button
-          className="btn-secondary flex items-center justify-center gap-2 text-sm"
+          className="btn-secondary flex items-center justify-center gap-2 text-sm min-h-[44px]"
           onClick={onToggleOptions}
           data-testid="toggle-import-export"
         >
@@ -104,7 +104,7 @@ export const SetupHeader = ({
 
       <div className="flex flex-col items-stretch lg:items-end gap-1 min-w-[220px]">
         <button
-          className="btn-primary flex items-center justify-center gap-2 text-sm w-full lg:w-auto"
+          className="btn-primary flex items-center justify-center gap-2 text-sm min-h-[44px] w-full lg:w-auto"
           onClick={onStartGame}
           disabled={!canLaunchGame}
           data-testid="start-game-btn"
@@ -113,7 +113,7 @@ export const SetupHeader = ({
           <Play size={18} />
           Lancer la partie
         </button>
-        <p className="text-xs text-[#B0B0C0] text-center lg:text-right">{launchHint}</p>
+        <p className="text-sm text-[#B0B0C0] text-center lg:text-right">{launchHint}</p>
       </div>
     </div>
   </div>
