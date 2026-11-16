@@ -35,6 +35,7 @@ const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
   const lightsUp = phase === 'wrong';
   const dark = lightsUp ? 0 : darkeningCurve(level);
   const tension = phase === 'tension';
+  const isVerdict = phase === 'correct' || phase === 'wrong';
 
   // Très léger (8 %) sur Q1–Q5, bien voilé dès Q11, quasi noir (92 %) en Q15 ; la tension ajoute une marche.
   const darkness = Math.min(0.96, 0.08 + 0.84 * dark + (tension ? 0.15 : 0));
@@ -81,19 +82,24 @@ const StageLightingBase = ({ level = 1, phase = 'idle' }) => {
         transition={{ duration: 1.2, ease: 'easeInOut' }}
       />
 
+      {/* Halo de verdict : double pulsation franche, puis reste bien présent jusqu'à la suite. */}
       <motion.div
         className="absolute inset-0"
         style={{
           background:
             phase === 'wrong'
-              ? 'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(211, 47, 47, 0.35) 0%, transparent 70%)'
-              : 'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 210, 83, 0.3) 0%, transparent 70%)',
+              ? 'radial-gradient(ellipse 90% 80% at 50% 45%, rgba(235, 40, 40, 0.62) 0%, rgba(211, 47, 47, 0.3) 45%, transparent 80%)'
+              : 'radial-gradient(ellipse 90% 80% at 50% 45%, rgba(0, 230, 90, 0.55) 0%, rgba(0, 210, 83, 0.26) 45%, transparent 80%)',
         }}
         initial={false}
         animate={{
-          opacity: phase === 'correct' || phase === 'wrong' ? [0, 1, 0.45] : 0,
+          opacity: isVerdict ? [0, 1, 0.5, 1, 0.45] : 0,
         }}
-        transition={{ duration: phase === 'correct' || phase === 'wrong' ? 1.4 : 0.6 }}
+        transition={
+          isVerdict
+            ? { duration: 1.6, times: [0, 0.18, 0.42, 0.62, 1], ease: 'easeInOut' }
+            : { duration: 0.6 }
+        }
       />
     </div>
   );
