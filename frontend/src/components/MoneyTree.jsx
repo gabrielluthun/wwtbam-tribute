@@ -20,14 +20,15 @@ const MoneyTreeBase = ({ currentLevel, highlightLevel = currentLevel, flash = nu
       
       <motion.div 
         data-testid="money-tree"
-        className={`money-tree-panel fixed right-0 top-0 h-full w-64 p-4 z-50
-          lg:sticky lg:z-auto lg:h-screen lg:w-72 lg:shrink-0 lg:flex lg:flex-col lg:justify-center lg:overflow-y-auto
+        className={`money-tree-panel fixed right-0 top-0 h-full w-64 p-4 z-50 overflow-y-auto
+          lg:sticky lg:z-auto lg:h-screen lg:w-72 lg:shrink-0 lg:flex lg:flex-col lg:justify-center
           ${isOpen ? 'open' : ''} 
           transition-transform duration-300 lg:transition-none`}
       >
         {/* Close button for mobile */}
         <button 
-          className="lg:hidden absolute top-4 left-4 text-white"
+          className="lg:hidden absolute top-2 left-2 p-2.5 text-white"
+          aria-label="Fermer les gains"
           onClick={onClose}
           data-testid="close-money-tree"
         >
@@ -54,7 +55,7 @@ const MoneyTreeBase = ({ currentLevel, highlightLevel = currentLevel, flash = nu
                 key={level.level}
                 type="button"
                 data-testid={`money-level-${level.level}`}
-                className={`relative flex items-center justify-between py-2 px-3 rounded
+                className={`relative flex items-center justify-between min-h-[44px] lg:min-h-0 py-2 px-3 rounded
                   ${isCheckpoint ? 'border-l-2 border-[#00E5FF] money-item-checkpoint' : ''}
                   ${flashKind ? `money-item-flash-${flashKind}` : ''}
                   ${onSelectLevel ? 'w-full text-left cursor-pointer hover:bg-white/10' : 'w-full'}
