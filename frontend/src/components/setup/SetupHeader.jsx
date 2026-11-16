@@ -1,10 +1,14 @@
 import { ArrowLeft, Library, Play, Save, Settings } from 'lucide-react';
 import { SETUP_QUESTION_COUNT } from '../../setup/setupConstants';
 
+/** « 0 question prête », « 1 question prête », « 5 questions prêtes ». */
+function formatReadyCount(count) {
+  return count > 1 ? `${count} questions prêtes` : `${count} question prête`;
+}
+
 export const SetupHeader = ({
   completedCount,
   themeStepCompleted,
-  questionsStepCompleted,
   canLaunchGame,
   loadedTheme,
   shuffleEnabled,
@@ -30,42 +34,20 @@ export const SetupHeader = ({
         <h1 className="text-2xl sm:text-3xl font-bold font-['Chivo'] text-white">
           Créer vos questions
         </h1>
-        <p className="text-[#D8D8E8] text-sm font-medium">
-          {completedCount}/{SETUP_QUESTION_COUNT} questions complètes
+        <p
+          className={`text-sm font-medium ${canLaunchGame ? 'text-green-300' : 'text-[#D8D8E8]'}`}
+          data-testid="setup-status"
+        >
+          {formatReadyCount(completedCount)} sur {SETUP_QUESTION_COUNT}
+          {canLaunchGame && ', prêt à lancer'}
         </p>
       </div>
 
       <div className="hidden sm:block w-[72px]" aria-hidden="true" />
     </div>
 
+    {(loadedTheme || shuffleEnabled) && (
     <div className="flex items-center justify-center gap-2 flex-wrap text-xs sm:text-sm">
-      <span
-        className={`px-2 py-1 rounded-full border ${
-          themeStepCompleted
-            ? 'bg-green-500/10 text-green-300 border-green-500/30'
-            : 'bg-white/5 text-[#B0B0C0] border-white/10'
-        }`}
-      >
-        {themeStepCompleted ? 'Thème prêt' : 'Thème à définir'}
-      </span>
-      <span
-        className={`px-2 py-1 rounded-full border ${
-          questionsStepCompleted
-            ? 'bg-green-500/10 text-green-300 border-green-500/30'
-            : 'bg-white/5 text-[#B0B0C0] border-white/10'
-        }`}
-      >
-        {completedCount}/{SETUP_QUESTION_COUNT} questions prêtes
-      </span>
-      <span
-        className={`px-2 py-1 rounded-full border ${
-          canLaunchGame
-            ? 'bg-green-500/10 text-green-300 border-green-500/30'
-            : 'bg-white/5 text-[#B0B0C0] border-white/10'
-        }`}
-      >
-        {canLaunchGame ? 'Prêt à lancer' : 'Lancement verrouillé'}
-      </span>
       {loadedTheme && (
         <span
           className="px-2 py-1 rounded-full text-xs font-semibold"
@@ -88,6 +70,7 @@ export const SetupHeader = ({
         </span>
       )}
     </div>
+    )}
 
     <div className="glass-light rounded-lg p-3 sm:p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
