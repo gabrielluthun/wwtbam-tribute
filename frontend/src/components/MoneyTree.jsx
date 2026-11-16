@@ -2,7 +2,12 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { MONEY_LEVELS } from '../utils/gameData';
 
-const MoneyTreeBase = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
+/**
+ * @param highlightLevel niveau où se trouve la surbrillance (0 = aucune). Par défaut `currentLevel` ;
+ *   au verdict, elle glisse vers le palier suivant (bonne réponse) ou chute au palier garanti (erreur).
+ * @param flash { level, kind: 'won' | 'lost' } — clignotement du palier qui vient d'être joué.
+ */
+const MoneyTreeBase = ({ currentLevel, highlightLevel = currentLevel, flash = null, isOpen, onClose, onSelectLevel }) => {
   return (
     <>
       {/* Mobile overlay */}
@@ -38,18 +43,19 @@ const MoneyTreeBase = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
         <div className="space-y-1">
           {[...MONEY_LEVELS].reverse().map((level, idx) => {
             const reversedIndex = MONEY_LEVELS.length - 1 - idx;
-            const isCurrent = reversedIndex === currentLevel - 1;
+            const isCurrent = reversedIndex === highlightLevel - 1;
             const isPassed = reversedIndex < currentLevel - 1;
             const isCheckpoint = level.checkpoint;
-            
+            const flashKind = flash?.level === level.level ? flash.kind : null;
+
             return (
               <motion.button
                 key={level.level}
                 type="button"
                 data-testid={`money-level-${level.level}`}
-                className={`relative flex items-center justify-between py-2 px-3 rounded 
-                  ${isCurrent ? 'bg-[#FFD700]/20 money-item-active' : ''}
+                className={`relative flex items-center justify-between py-2 px-3 rounded
                   ${isCheckpoint ? 'border-l-2 border-[#00E5FF] money-item-checkpoint' : ''}
+                  ${flashKind ? `money-item-flash-${flashKind}` : ''}
                   ${onSelectLevel ? 'w-full text-left cursor-pointer hover:bg-white/10' : 'w-full'}
                 `}
                 onClick={() => onSelectLevel?.(level.level)}
@@ -58,10 +64,16 @@ const MoneyTreeBase = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
                 transition={{ delay: idx * 0.03 }}
               >
                 {isCurrent && (
-                  <div className="progress-indicator" />
+                  <motion.div
+                    layoutId="money-tree-highlight"
+                    className="absolute inset-0 rounded bg-[#FFD700]/20 money-item-active pointer-events-none"
+                    transition={{ type: 'spring', stiffness: 90, damping: 16, delay: 0.6 }}
+                  >
+                    <div className="progress-indicator" />
+                  </motion.div>
                 )}
-                
-                <span className={`text-sm font-medium
+
+                <span className={`relative text-sm font-medium
                   ${isCurrent ? 'text-[#FFD700] text-glow-gold font-bold' : ''}
                   ${isPassed ? 'text-[#B0B0C0] opacity-50' : ''}
                   ${!isCurrent && !isPassed ? 'text-white' : ''}
@@ -70,7 +82,7 @@ const MoneyTreeBase = ({ currentLevel, isOpen, onClose, onSelectLevel }) => {
                   {level.level}
                 </span>
                 
-                <span className={`text-sm font-semibold
+                <span className={`relative text-sm font-semibold
                   ${isCurrent ? 'text-[#FFD700] text-glow-gold' : ''}
                   ${isPassed ? 'text-[#B0B0C0] opacity-50' : ''}
                   ${!isCurrent && !isPassed ? 'text-white' : ''}

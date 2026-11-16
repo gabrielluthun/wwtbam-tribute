@@ -4,16 +4,19 @@ import { GAME_STATES } from '../game/gameConstants';
 
 /**
  * Timer de question : décompte et son de fin (time up).
+ * `holdTimer` : gèle le décompte (ex. réponses pas encore toutes affichées).
  */
-export function useGameTimer({ gameState, setGameState, currentLevel }) {
+export function useGameTimer({ gameState, setGameState, currentLevel, holdTimer = false }) {
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30);
   const [timeRemaining, setTimeRemaining] = useState(30);
   const [timerPaused, setTimerPaused] = useState(false);
   const timerRef = useRef(null);
 
+  const isCounting = timerEnabled && gameState === GAME_STATES.PLAYING && !timerPaused && !holdTimer;
+
   useEffect(() => {
-    if (!timerEnabled || gameState !== GAME_STATES.PLAYING || timerPaused) {
+    if (!isCounting) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -40,7 +43,7 @@ export function useGameTimer({ gameState, setGameState, currentLevel }) {
         timerRef.current = null;
       }
     };
-  }, [timerEnabled, gameState, timerPaused, currentLevel, setGameState]);
+  }, [isCounting, currentLevel, setGameState]);
 
   useEffect(() => {
     if (timerEnabled) {

@@ -23,6 +23,7 @@ import { pickTwoWrongAnswersToEliminate } from '../game/jokerUtils';
 import { useGameTimer } from './useGameTimer';
 
 const GAME_MASTER_VOLUME_KEY = 'gameMasterVolume';
+const ANSWER_COUNT = 4;
 
 function readStoredMasterVolume() {
   try {
@@ -59,6 +60,10 @@ export function useGame(navigate) {
   const [audienceMessage, setAudienceMessage] = useState('');
   const [showAudienceDialog, setShowAudienceDialog] = useState(false);
 
+  /** Révélation progressive : nombre de réponses (A → D) déjà affichées pour la question courante. */
+  const [revealedCount, setRevealedCount] = useState(0);
+  const allAnswersRevealed = revealedCount >= ANSWER_COUNT;
+
   const {
     timerEnabled,
     setTimerEnabled,
@@ -68,7 +73,7 @@ export function useGame(navigate) {
     setTimeRemaining,
     timerPaused,
     setTimerPaused,
-  } = useGameTimer({ gameState, setGameState, currentLevel });
+  } = useGameTimer({ gameState, setGameState, currentLevel, holdTimer: !allAnswersRevealed });
 
   const isManualRevealActive = MANUAL_REVEAL_ENABLED && currentLevel >= 6;
   const revealResolverRef = useRef(null);
@@ -119,6 +124,7 @@ export function useGame(navigate) {
     setEliminatedAnswers([]);
     setAudienceResults(null);
     setAudienceMessage('');
+    setRevealedCount(0);
   }, []);
 
   useEffect(() => {
@@ -184,9 +190,19 @@ export function useGame(navigate) {
     soundManager.preloadForLevel(currentLevel, 1);
   }, [currentLevel]);
 
+  const handleRevealNextAnswer = useCallback(() => {
+    if (gameState !== GAME_STATES.PLAYING || revealedCount >= ANSWER_COUNT) return;
+    setRevealedCount(revealedCount + 1);
+  }, [gameState, revealedCount]);
+
+  const handleRevealAllAnswers = useCallback(() => {
+    if (gameState !== GAME_STATES.PLAYING || revealedCount >= ANSWER_COUNT) return;
+    setRevealedCount(ANSWER_COUNT);
+  }, [gameState, revealedCount]);
+
   const handleSelectAnswer = useCallback(
     (index) => {
-      if (gameState !== GAME_STATES.PLAYING || eliminatedAnswers.includes(index)) return;
+      if (gameState !== GAME_STATES.PLAYING || !allAnswersRevealed || eliminatedAnswers.includes(index)) return;
 
       setSelectedAnswer(index);
       setGameState(GAME_STATES.SELECTED);
@@ -194,7 +210,7 @@ export function useGame(navigate) {
 
       setAnswerStates((prev) => prev.map((s, i) => (i === index ? 'selected' : s)));
     },
-    [gameState, eliminatedAnswers, setTimerPaused],
+    [gameState, allAnswersRevealed, eliminatedAnswers, setTimerPaused],
   );
 
   const handleConfirmAnswer = useCallback(async () => {
@@ -321,7 +337,7 @@ export function useGame(navigate) {
   }, [gameState, setTimerPaused]);
 
   const handleFiftyFifty = useCallback(() => {
-    if (usedJokers.fifty || gameState !== GAME_STATES.PLAYING) return;
+    if (usedJokers.fifty || gameState !== GAME_STATES.PLAYING || !allAnswersRevealed) return;
 
     soundManager.playFiftyFifty();
     setUsedJokers((prev) => ({ ...prev, fifty: true }));
@@ -330,10 +346,10 @@ export function useGame(navigate) {
 
     setEliminatedAnswers(toEliminate);
     setAnswerStates((prev) => prev.map((s, i) => (toEliminate.includes(i) ? 'eliminated' : s)));
-  }, [usedJokers.fifty, gameState, currentQuestion]);
+  }, [usedJokers.fifty, gameState, allAnswersRevealed, currentQuestion]);
 
   const handlePhoneFriend = useCallback(() => {
-    if (usedJokers.phone || gameState !== GAME_STATES.PLAYING) return;
+    if (usedJokers.phone || gameState !== GAME_STATES.PLAYING || !allAnswersRevealed) return;
 
     soundManager.stopBed();
     setUsedJokers((prev) => ({ ...prev, phone: true }));
@@ -354,11 +370,11 @@ export function useGame(navigate) {
       setPhoneResponse({ ...response, isPending: false });
       phoneResponseTimeoutRef.current = null;
     }, thinkingDurationMs);
-  }, [usedJokers.phone, gameState, currentQuestion, currentLevel, setTimerPaused]);
+  }, [usedJokers.phone, gameState, allAnswersRevealed, currentQuestion, currentLevel, setTimerPaused]);
 
   // Audience Dialog
   const handleAskAudience = useCallback(() => {
-    if (usedJokers.audience || gameState !== GAME_STATES.PLAYING) return;
+    if (usedJokers.audience || gameState !== GAME_STATES.PLAYING || !allAnswersRevealed) return;
 
     soundManager.stopBed();
     soundManager.playAskAudience();
@@ -388,7 +404,7 @@ export function useGame(navigate) {
       audienceMessageTimeoutsRef.current = [];
       audienceResponseTimeoutRef.current = null;
     }, 32000);
-  }, [usedJokers.audience, gameState, currentQuestion, eliminatedAnswers, setTimerPaused]);
+  }, [usedJokers.audience, gameState, allAnswersRevealed, currentQuestion, eliminatedAnswers, setTimerPaused]);
 
   const closePhoneDialog = useCallback(() => {
     if (phoneResponseTimeoutRef.current) {
@@ -497,6 +513,10 @@ export function useGame(navigate) {
     audienceResults,
     audienceMessage,
     showAudienceDialog,
+    revealedCount,
+    allAnswersRevealed,
+    handleRevealNextAnswer,
+    handleRevealAllAnswers,
     timerEnabled,
     timeRemaining,
     isAwaitingNextQuestionClick,
