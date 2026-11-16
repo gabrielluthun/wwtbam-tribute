@@ -31,7 +31,7 @@ export const SetupQuestionEditor = ({
             return (
               <button
                 key={index}
-                className={`w-full flex items-center justify-between p-2 rounded text-sm transition-all
+                className={`w-full flex items-center justify-between min-h-[44px] lg:min-h-0 p-2 rounded text-sm transition-all
                   ${isActive ? 'bg-[#FFD700]/20 border border-[#FFD700]' : 'hover:bg-white/5'}
                   ${level.checkpoint ? 'border-l-2 border-l-[#00E5FF]' : ''}
                 `}
@@ -105,22 +105,30 @@ export const SetupQuestionEditor = ({
 
             {currentQuestion.answers.map((answer, idx) => (
               <div key={idx} className="flex items-center gap-3">
+                {/* Zone tactile 44×44 autour de la lettre hexagonale (le clip-path empêche d'agrandir la lettre elle-même). */}
                 <button
-                  className={`letter-badge flex-shrink-0 cursor-pointer transition-all ${
-                    currentQuestion.correctIndex === idx
-                      ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-[#1A1A3A]'
-                      : 'opacity-60 hover:opacity-100'
-                  }`}
+                  type="button"
+                  className="group flex-shrink-0 flex items-center justify-center w-11 h-11 cursor-pointer"
                   onClick={() => setCorrectAnswer(idx)}
                   title={currentQuestion.correctIndex === idx ? 'Bonne réponse' : 'Définir comme bonne réponse'}
+                  aria-pressed={currentQuestion.correctIndex === idx}
+                  aria-label={`Réponse ${ANSWER_LETTERS[idx]} : ${currentQuestion.correctIndex === idx ? 'bonne réponse' : 'définir comme bonne réponse'}`}
                   data-testid={`correct-btn-${ANSWER_LETTERS[idx].toLowerCase()}`}
                 >
-                  {ANSWER_LETTERS[idx]}
+                  <span
+                    className={`letter-badge transition-all ${
+                      currentQuestion.correctIndex === idx
+                        ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-[#1A1A3A]'
+                        : 'opacity-60 group-hover:opacity-100'
+                    }`}
+                  >
+                    {ANSWER_LETTERS[idx]}
+                  </span>
                 </button>
                 <Input
                   value={answer}
                   onChange={(e) => updateAnswer(idx, e.target.value)}
-                  className={`game-input flex-1 ${errors[`${currentEditIndex}-answer-${idx}`] ? 'border-red-500' : ''}`}
+                  className={`game-input flex-1 h-11 ${errors[`${currentEditIndex}-answer-${idx}`] ? 'border-red-500' : ''}`}
                   placeholder={`Réponse ${ANSWER_LETTERS[idx]}...`}
                   data-testid={`answer-input-${ANSWER_LETTERS[idx].toLowerCase()}`}
                 />
